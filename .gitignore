@@ -1,0 +1,10 @@
+/CODE/backend/build/
+CODE/backend/*.txt
+CODE/backend/test_results_1751990418.json
+CODE/backend/test_results_1751990622.json
+CODE/backend/test_results_1751990745.json
+CODE/backend/test_results_1751990819.json
+CODE/backend/test_results_1751990963.json
+CODE/backend/test_results_1751991107.json
+CODE/backend/test_results_1751991147.json
+CODE/frontend/node_modules/

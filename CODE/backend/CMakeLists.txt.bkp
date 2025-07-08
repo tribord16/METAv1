@@ -1,0 +1,35 @@
+cmake_minimum_required(VERSION 3.20)
+
+project(RBLeague)
+
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Forcer les chemins MySQL (solution universelle Linux/WSL2)
+set(MYSQL_INCLUDE_DIRS "/usr/include/mysql")
+set(MYSQL_LIBRARIES "/usr/lib/x86_64-linux-gnu/libmysqlclient.so")
+
+
+find_package(Drogon REQUIRED)
+find_package(jsoncpp REQUIRED)
+
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+
+add_executable(RBLeague ${SOURCES})
+
+
+target_include_directories(RBLeague PRIVATE
+    ${Drogon_INCLUDE_DIRS}
+    ${jsoncpp_INCLUDE_DIRS}
+    ${MYSQL_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+
+target_link_libraries(RBLeague PRIVATE
+    Drogon::Drogon
+    jsoncpp_lib
+    pthread
+    ${MYSQL_LIBRARIES}
+)
