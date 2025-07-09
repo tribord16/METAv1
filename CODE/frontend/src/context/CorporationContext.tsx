@@ -1,3 +1,20 @@
+/**
+ * @file CorporationContext.tsx
+ * @brief Corporation context/provider for MetaLeague frontend
+ *
+ * ROLE: Provides corporation state and actions (select, create, dashboard) to the app via React context.
+ * PURPOSE: Centralizes all logic for corporation selection, creation, and dashboard refresh.
+ * DEPENDENCIES: React, corporationService, Corporation types, AuthContext
+ *
+ * TODOs:
+ *   - [ ] Add error handling for all async actions
+ *   - [ ] Add tests for context logic
+ *   - [ ] Add loading indicators for all async actions
+ *   - [ ] Add role/permission checks for corporation actions
+ *   - [ ] Add logging for corporation events
+ *
+ * Patterns: Context Provider, useContext, useCallback, useEffect
+ */
 import React, { useCallback, createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Corporation, CorporationDashboard } from '../types';
 import { corporationService } from '../services/corporationService';
@@ -22,22 +39,27 @@ interface CorporationProviderProps {
 }
 
 export const CorporationProvider: React.FC<CorporationProviderProps> = ({ children }) => {
+  // corporations: all corporations the user has access to
   const [corporations, setCorporations] = useState<Corporation[]>([]);
+  // currentCorporation: the selected/active corporation
   const [currentCorporation, setCurrentCorporation] = useState<Corporation | null>(null);
+  // currentDashboard: dashboard data for the selected corporation
   const [currentDashboard, setCurrentDashboard] = useState<CorporationDashboard | null>(null);
+  // loading: true while fetching or updating corporations
   const [loading, setLoading] = useState(false);
+  // error: error message for async actions
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
+  // Loads all corporations for the current user
   const loadCorporations = useCallback(async () => {
     if (!user) return;
-    
     try {
       setLoading(true);
       setError(null);
       const corps = await corporationService.getUserCorporations();
       setCorporations(corps);
-      
+      // TODO: Handle empty state and errors
       // Auto-select saved corporation or first one
       const savedCorporationId = localStorage.getItem('currentCorporationId');
       if (savedCorporationId && corps.length > 0) {

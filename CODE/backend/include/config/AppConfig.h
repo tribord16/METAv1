@@ -1,58 +1,28 @@
-// ====== ./include/config/AppConfig.h ======
-/**
- * @file AppConfig.h  
- * @brief Gestionnaire de configuration applicative centralisé
- * @author Meta League Backend Team
- * @date 2025
- * @version 1.0
+
+/************************************************************
+ * @file AppConfig.h
+ * @brief Gestionnaire centralisé de la configuration applicative
  *
- * RESPONSABILITÉS :
- * - Charger et parser les variables d'environnement (.env)
- * - Fournir une interface typée pour accéder aux configurations
- * - Centraliser TOUTE la configuration applicative
- * - Valider les configurations au démarrage
- * - Séparer config applicative de config Drogon
+ * Rôle :
+ *   - Charger et parser les variables d'environnement (.env)
+ *   - Fournir une interface typée pour accéder à la configuration
+ *   - Centraliser toute la configuration de l'application
+ *   - Valider les paramètres critiques au démarrage
  *
- * ARCHITECTURE DE CONFIGURATION :
- * ```
- * dev.env (variables) → AppConfig::init() → Getters typés
- * config.json (Drogon) → app().loadConfigFile() → Framework
- * ```
+ * Place dans l'architecture :
+ *   - Fournit la configuration à tous les modules (contrôleurs, services, middlewares)
+ *   - Sépare la config métier (AppConfig) de la config framework (config.json)
  *
- * SÉPARATION DES RESPONSABILITÉS :
- * - AppConfig : variables métier (DB, JWT, paramètres jeu)
- * - config.json : config framework (serveur, middlewares, ORM)
+ * Dépendances :
+ *   - Aucune dépendance directe (header)
+ *   - Utilisé par : main.cpp, services, middlewares, etc.
  *
- * VARIABLES GÉRÉES :
- * - Application : nom, mode debug
- * - Serveur : host, port d'écoute
- * - Base de données : connexion PostgreSQL
- * - JWT : clé secrète pour signature
- * - Jeu : paramètres métier (budgets, salaires, etc.)
- *
- * EXEMPLE DE FICHIER .env :
- * ```
- * APP_NAME=Meta League Backend
- * DEBUG_MODE=true
- * SERVER_HOST=0.0.0.0
- * SERVER_PORT=8080
- * DB_HOST=localhost
- * DB_PORT=5432
- * JWT_SECRET=your-secret-key-here
- * GAME_DEFAULT_CORPORATION_BUDGET=100000.0
- * ```
- *
- * EXEMPLE D'UTILISATION :
- * ```cpp
- * // Au démarrage (main.cpp)
- * AppConfig::init(); // Charge le fichier .env
- * 
- * // Partout dans l'app
- * std::string dbHost = AppConfig::getDbHost();
- * int port = AppConfig::getServerPort();
- * bool isDebug = AppConfig::isDebug();
- * ```
- */
+ * TODO :
+ *   - Ajouter des validations plus strictes sur les variables critiques
+ *   - Ajouter des tests unitaires sur le parsing et les getters
+ *   - Gérer la configuration multi-environnement (dev/prod/staging)
+ *   - Logger les erreurs de config de façon plus explicite
+ ************************************************************/
 
 #pragma once
 #include <string>

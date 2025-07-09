@@ -1,25 +1,48 @@
-// src/pages/auth/LoginPage.tsx
+/**
+ * @file LoginPage.tsx
+ * @brief Login page for MetaLeague frontend
+ *
+ * ROLE: Provides a form for users to log in to their account.
+ * PURPOSE: Handles authentication logic and navigation after login.
+ * DEPENDENCIES: React, AuthContext, react-router-dom
+ *
+ * TODOs:
+ *   - [ ] Add validation for username/password fields
+ *   - [ ] Add error messages for network/server errors
+ *   - [ ] Add loading spinner for async actions
+ *   - [ ] Add tests for login logic and error states
+ *   - [ ] Add accessibility improvements
+ *
+ * Patterns: Controlled form, async submit, context usage
+ */
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
+
+// LoginPage: Controlled login form with async submit
 export const LoginPage: React.FC = () => {
+  // username: controlled input for username
   const [username, setUsername] = useState('');
+  // password: controlled input for password
   const [password, setPassword] = useState('');
+  // error: error message for login failures
   const [error, setError] = useState('');
+  // loading: true while login request is in progress
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Handles form submission and login logic
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
       await login(username, password);
       navigate('/dashboard');
     } catch (err) {
+      // TODO: Improve error handling for different error types
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);

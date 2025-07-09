@@ -1,17 +1,38 @@
+/**
+ * @file Navbar.tsx
+ * @brief Top navigation bar for MetaLeague frontend
+ *
+ * ROLE: Displays app title, current corporation, and user actions (logout, switch corp).
+ * PURPOSE: Provides navigation and context for the user across all pages.
+ * DEPENDENCIES: React, AuthContext, CorporationContext, react-router-dom
+ *
+ * TODOs:
+ *   - [ ] Add user avatar and profile menu
+ *   - [ ] Add responsive/mobile menu
+ *   - [ ] Add tests for navigation and logout
+ *   - [ ] Add accessibility improvements
+ *
+ * Patterns: Functional component, context usage, navigation hooks
+ */
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCorporation } from '../context/CorporationContext';
 import { useNavigate } from 'react-router-dom';
 
+
+// NavbarProps: Optional title for the navbar
 interface NavbarProps {
   title?: string;
 }
 
+
+// Navbar: Shows app title, current corporation, and user actions
 export const Navbar: React.FC<NavbarProps> = ({ title = "MetaLeague Manager" }) => {
   const { user, logout } = useAuth();
   const { currentCorporation, corporations } = useCorporation();
   const navigate = useNavigate();
 
+  // Handler to switch corporation (if user has several)
   const handleSwitchCorporation = () => {
     navigate('/corporation/select');
   };

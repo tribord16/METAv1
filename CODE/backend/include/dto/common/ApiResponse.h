@@ -1,11 +1,23 @@
-// ====== ./include/dto/common/ApiResponse.h ======
-/**
+
+/************************************************************
  * @file ApiResponse.h
  * @brief DTO de réponse API générique pour toutes les opérations
- * 
- * Template de réponse standardisé pour l'ensemble de l'API.
- * Assure la cohérence des réponses HTTP à travers tous les endpoints.
- */
+ *
+ * Rôle :
+ *   - Fournir une structure de réponse uniforme pour toutes les routes API
+ *   - Faciliter la sérialisation JSON des réponses (succès/erreur)
+ *
+ * Place dans l'architecture :
+ *   - Utilisé par tous les contrôleurs/services pour retourner des réponses HTTP
+ *
+ * Dépendances :
+ *   - json/json.h (sérialisation JSON)
+ *   - string, vector
+ *
+ * TODO :
+ *   - Ajouter des champs pour pagination, meta, etc. si besoin
+ *   - Ajouter des tests unitaires sur la sérialisation
+ ************************************************************/
 
 #pragma once
 #include <json/json.h>

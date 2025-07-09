@@ -2,44 +2,29 @@
 
 
 
-// ====== ./include/middlewares/CorsMiddleware.h ======
-/**
+
+/************************************************************
  * @file CorsMiddleware.h
  * @brief Middleware CORS global pour gérer les requêtes cross-origin
- * @author Meta League Backend Team
- * @date 2025
- * @version 1.0
  *
- * RESPONSABILITÉS :
- * - Ajouter les headers CORS à TOUTES les réponses HTTP
- * - Gérer les requêtes OPTIONS (preflight) automatiquement
- * - Autoriser les origins, méthodes et headers appropriés
- * - S'exécuter de manière transparente pour tous les endpoints
+ * Rôle :
+ *   - Ajouter les headers CORS à toutes les réponses HTTP
+ *   - Gérer les requêtes OPTIONS (preflight) automatiquement
+ *   - Permettre aux applications web de consommer l'API en cross-domain
  *
- * CORS (Cross-Origin Resource Sharing) :
- * - Mécanisme de sécurité des navigateurs
- * - Contrôle les requêtes JavaScript cross-domain
- * - Nécessaire pour les APIs consommées par des webapps
+ * Place dans l'architecture :
+ *   - Middleware global, déclaré dans config.json
+ *   - S'applique à tous les endpoints de l'API
  *
- * CONFIGURATION ACTUELLE :
- * - Origins : * (tous autorisés - à restreindre en production)
- * - Methods : GET, POST, PUT, DELETE, OPTIONS
- * - Headers : Content-Type, Authorization, X-Requested-With
- * - Max-Age : 86400 secondes (24h de cache preflight)
+ * Dépendances :
+ *   - Drogon (HttpMiddleware)
+ *   - utils/Logger (logs)
  *
- * UTILISATION :
- * - Middleware GLOBAL déclaré dans config.json
- * - S'applique automatiquement à TOUS les endpoints
- * - Traitement transparent pour les développeurs
- *
- * EXEMPLE DE HEADERS AJOUTÉS :
- * ```
- * Access-Control-Allow-Origin: *
- * Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
- * Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With
- * Access-Control-Max-Age: 86400
- * ```
- */
+ * TODO :
+ *   - Restreindre les origins autorisés en production
+ *   - Ajouter des tests unitaires sur les cas CORS
+ *   - Logger les origines et méthodes pour audit
+ ************************************************************/
 
 #pragma once
 #include <drogon/HttpMiddleware.h>

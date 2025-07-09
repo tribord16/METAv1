@@ -1,3 +1,20 @@
+/**
+ * @file AuthContext.tsx
+ * @brief Authentication context/provider for MetaLeague frontend
+ *
+ * ROLE: Provides authentication state and actions (login, logout, register) to the app via React context.
+ * PURPOSE: Centralizes user session logic, exposes hooks for login/logout/register, and manages loading state.
+ * DEPENDENCIES: React, authService, User type
+ *
+ * TODOs:
+ *   - [ ] Add persistent login (remember me)
+ *   - [ ] Add error handling for all async actions
+ *   - [ ] Add tests for context logic
+ *   - [ ] Add role/permission checks for user
+ *   - [ ] Add logging for auth events
+ *
+ * Patterns: Context Provider, useContext, useEffect for session restore
+ */
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
 import { authService } from '../services/authService';
@@ -17,9 +34,12 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  // user: current authenticated user (null if not logged in)
   const [user, setUser] = useState<User | null>(null);
+  // loading: true while checking session or performing auth actions
   const [loading, setLoading] = useState(true);
 
+  // On mount, try to restore user session from storage/service
   useEffect(() => {
     const loadUser = async () => {
       if (authService.isAuthenticated()) {
@@ -27,6 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const currentUser = await authService.getCurrentUser();
           setUser(currentUser);
         } catch (error) {
+          // TODO: Add user-friendly error message
           console.error('Error loading user:', error);
           authService.logout();
         }

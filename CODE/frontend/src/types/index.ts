@@ -1,3 +1,20 @@
+/**
+ * @file index.ts
+ * @brief TypeScript types/interfaces pour le frontend MetaLeague
+ *
+ * ROLE : Définit tous les types partagés (User, Corporation, Dashboard, etc.)
+ * PURPOSE : Garantit la cohérence des données entre les composants, services et contextes
+ * DÉPENDANCES : Utilisé partout dans le frontend (services, context, pages, etc.)
+ *
+ * TODOs :
+ *   - [ ] Ajouter des types pour les erreurs API et les réponses génériques
+ *   - [ ] Ajouter des types pour les formulaires (login, register, création de corporation)
+ *   - [ ] Ajouter des types pour les permissions/roles utilisateur
+ *   - [ ] Ajouter des tests de typage (type tests)
+ *
+ * Patterns : Centralisation des types, typage fort, documentation pédagogique
+ */
+
 export interface User {
   id: number;
   username: string;

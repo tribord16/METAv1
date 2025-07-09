@@ -1,4 +1,27 @@
-// src/middlewares/RateLimitMiddleware.cpp
+// ************************************************************
+// @file RateLimitMiddleware.cpp
+// @brief Implémentation du middleware de limitation de taux (anti-spam, anti-brute-force)
+//
+// Rôle :
+//   - Limiter le nombre de requêtes par IP (globale et endpoints sensibles)
+//   - Bannir temporairement les IPs après abus ou brute-force
+//   - Ajouter des headers informatifs de rate limiting
+//   - Nettoyer périodiquement les entrées obsolètes
+//
+// Place dans l'architecture :
+//   - Middleware de sécurité, utilisé sur les endpoints critiques (auth, etc.)
+//   - S'exécute avant le contrôleur, court-circuite en cas d'abus
+//
+// Dépendances :
+//   - Drogon (HttpMiddleware)
+//   - dto/common/ApiResponse (formatage des erreurs)
+//   - utils/Logger (logs)
+//
+// TODO :
+//   - Rendre la configuration dynamique (par fichier ou env)
+//   - Logger les tentatives de brute-force avec plus de détails (User-Agent, etc.)
+//   - Ajouter des tests unitaires sur tous les cas limites
+// ************************************************************
 
 #include <drogon/HttpAppFramework.h> // Pour DROGON_REGISTER_MIDDLEWARE
 #include "middlewares/RateLimitMiddleware.h"
@@ -15,23 +38,18 @@ std::unordered_map<std::string, RateLimitInfo> RateLimitMiddleware::ip_tracking_
 std::mutex RateLimitMiddleware::tracking_mutex_;
 const int middlewares::RateLimitMiddleware::BAN_DURATION_MINUTES = 15; // ou la valeur que tu veux
 
-
 // Constructeur
 RateLimitMiddleware::RateLimitMiddleware() {
     Logger::info("[RateLimitMiddleware] Middleware de limitation de taux initialisé.");
 }
 
-
-
 void RateLimitMiddleware::invoke(const HttpRequestPtr& req,
                                 MiddlewareNextCallback&& nextCb,
                                 MiddlewareCallback&& mcb) {
-    
     std::string clientIp = getClientIp(req);
     std::string path = req->path();
-    
     Logger::debug("[RateLimit] Checking request from IP: " + clientIp + " to: " + path);
-    
+
     // Nettoyer les anciennes entrées périodiquement
     static auto last_cleanup = std::chrono::system_clock::now();
     auto now = std::chrono::system_clock::now();
@@ -39,14 +57,14 @@ void RateLimitMiddleware::invoke(const HttpRequestPtr& req,
         cleanupOldEntries();
         last_cleanup = now;
     }
-    
+
     // Vérifier si l'IP est bannie
     {
         std::lock_guard<std::mutex> lock(tracking_mutex_);
         auto it = ip_tracking_.find(clientIp);
         if (it != ip_tracking_.end() && now < it->second.ban_until) {
             Logger::warn("[RateLimit] Blocked banned IP: " + clientIp);
-            
+            // TODO: Logger l'User-Agent et le path pour audit
             auto response = dto::common::ApiResponse::error("Too many failed attempts. Try again later.");
             auto httpResp = HttpResponse::newHttpJsonResponse(response.toJson());
             httpResp->setStatusCode(HttpStatusCode::k429TooManyRequests);
@@ -55,7 +73,7 @@ void RateLimitMiddleware::invoke(const HttpRequestPtr& req,
             return;
         }
     }
-    
+
     // Vérifier les limites de taux
     if (!checkRateLimit(clientIp, path)) {
         Logger::warn("[RateLimit] Rate limit exceeded for IP: " + clientIp);

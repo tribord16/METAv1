@@ -1,50 +1,25 @@
-// ====== ./include/dto/auth/RegisterRequest.h ======
-/**
+
+/************************************************************
  * @file RegisterRequest.h
  * @brief DTO de requête d'inscription utilisateur - Contrat d'API
- * @author Meta League Backend Team
- * @date 2025
- * @version 1.0
  *
- * RESPONSABILITÉS :
- * - Définir le contrat JSON pour l'inscription utilisateur
- * - Valider toutes les données d'entrée (format, longueur, caractères)
- * - Fournir des messages d'erreur clairs et localisés
- * - Sérialiser/désérialiser depuis/vers JSON
- * - Encapsuler toute la logique de validation métier
+ * Rôle :
+ *   - Désérialiser les données d'inscription depuis le JSON
+ *   - Valider la présence et le format des champs requis (username, email, password)
+ *   - Fournir des messages d'erreur détaillés pour l'API
  *
- * PATTERN DTO (Data Transfer Object) :
- * - Séparation claire entre API contract et modèle métier
- * - Validation côté API (format, structure)
- * - Transformation vers entités métier
- * - Stabilité de l'API (versioning possible)
+ * Place dans l'architecture :
+ *   - Utilisé par AuthController pour parser et valider les requêtes d'inscription
  *
- * VALIDATION IMPLÉMENTÉE :
- * - Username : 3-50 caractères, lettres/chiffres/underscore uniquement
- * - Email : format RFC compliant (regex validation)
- * - Password : minimum 6 caractères (à renforcer selon besoins)
+ * Dépendances :
+ *   - json/json.h (sérialisation JSON)
+ *   - utils/Logger (logs)
+ *   - regex (validation email)
  *
- * EXEMPLE JSON :
- * ```json
- * {
- *   "username": "alice_martin",
- *   "email": "alice@example.com", 
- *   "password": "monMotDePasseSecurise123"
- * }
- * ```
- *
- * RÉPONSE D'ERREUR :
- * ```json
- * {
- *   "success": false,
- *   "message": "Validation failed",
- *   "errors": [
- *     "Username must be 3-50 characters and contain only letters, numbers, and underscores",
- *     "Invalid email format"
- *   ]
- * }
- * ```
- */
+ * TODO :
+ *   - Ajouter la validation de la force du mot de passe (majuscule, chiffre, etc.)
+ *   - Ajouter des tests unitaires sur la désérialisation et la validation
+ ************************************************************/
 
 #pragma once
 #include <json/json.h>

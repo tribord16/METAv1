@@ -1,4 +1,20 @@
-// src/services/apiClient.ts
+/**
+ * @file apiClient.ts
+ * @brief Axios HTTP client instance for MetaLeague frontend
+ *
+ * ROLE: Centralizes all HTTP requests and config (baseURL, headers, interceptors)
+ * PURPOSE: Ensures consistent API calls and error handling across the app
+ * DEPENDENCIES: axios
+ *
+ * TODOs:
+ *   - [ ] Add support for refresh token/auto-renew
+ *   - [ ] Add logging for all requests/responses
+ *   - [ ] Add tests for interceptors and error handling
+ *   - [ ] Make API_BASE_URL configurable (env)
+ *
+ * Patterns: Singleton client, request/response interceptors
+ */
+
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -8,6 +24,7 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // withCredentials: true, // TEMPORAIREMENT DÉSACTIVÉ POUR DEBUG
 });
 
 // Interceptor pour ajouter le token JWT

@@ -1,53 +1,30 @@
-// ====== ./include/middlewares/JwtMiddleware.h ======
-/**
+
+/************************************************************
  * @file JwtMiddleware.h
  * @brief Middleware d'authentification JWT pour protection des routes
- * @author Meta League Backend Team
- * @date 2025
- * @version 1.0
  *
- * RESPONSABILITÉS :
- * - Vérifier la présence et validité des tokens JWT
- * - Extraire les informations utilisateur du token
- * - Injecter les données utilisateur dans la requête (req->attributes)
- * - Bloquer l'accès si token invalide/absent
- * - Gérer les erreurs d'authentification avec réponses appropriées
+ * Rôle :
+ *   - Vérifier la présence et validité des tokens JWT
+ *   - Extraire les informations utilisateur du token
+ *   - Injecter les données utilisateur dans la requête (req->attributes)
+ *   - Bloquer l'accès si token invalide/absent
+ *   - Gérer les erreurs d'authentification avec réponses appropriées
  *
- * ARCHITECTURE MIDDLEWARE DROGON :
- * ```
- * HTTP Request → JwtMiddleware::invoke() → Controller::method()
- *                      ↓ (si token invalide)
- *                HTTP 401 Unauthorized
- * ```
+ * Place dans l'architecture :
+ *   - Middleware de sécurité, utilisé dans les routes protégées (controllers)
+ *   - S'exécute avant le contrôleur, court-circuite en cas d'échec
  *
- * PATTERN D'UTILISATION :
- * - Déclaré dans PATH_LIST des contrôleurs pour routes protégées
- * - Automatiquement exécuté par Drogon avant le contrôleur
- * - Utilise les callbacks Drogon pour chaîner ou court-circuiter
+ * Dépendances :
+ *   - Drogon (HttpMiddleware)
+ *   - services/JwtService (vérification cryptographique)
+ *   - dto/common/ApiResponse (formatage des erreurs)
+ *   - utils/Logger (logs)
  *
- * SÉCURITÉ :
- * - Validation cryptographique du token (signature HMAC-SHA256)
- * - Vérification de l'expiration (timestamp)
- * - Protection contre les tokens malformés
- * - Logging des tentatives d'accès non autorisées
- *
- * EXEMPLE D'UTILISATION :
- * ```cpp
- * // Dans AuthController.h
- * PATH_LIST_BEGIN
- * PATH_ADD("/api/auth/me", Get, "middlewares::JwtMiddleware");
- * PATH_LIST_END
- * 
- * // Le middleware s'exécute automatiquement avant handleMe()
- * ```
- *
- * FLOW COMPLET :
- * 1. Client envoie : Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
- * 2. Middleware extrait et valide le token
- * 3. Si valide : injecte user_id, username, email dans req->attributes()
- * 4. Appelle le contrôleur qui peut utiliser ces données
- * 5. Si invalide : retourne 401 sans appeler le contrôleur
- */
+ * TODO :
+ *   - Ajouter la gestion des rôles/permissions dans le payload
+ *   - Logger les tentatives d'accès non autorisées avec plus de détails
+ *   - Ajouter des tests unitaires sur tous les cas d'erreur
+ ************************************************************/
 
 #pragma once
 #include <drogon/HttpMiddleware.h>

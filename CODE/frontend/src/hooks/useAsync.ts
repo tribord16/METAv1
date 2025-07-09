@@ -1,3 +1,20 @@
+/**
+ * @file useAsync.ts
+ * @brief Custom React hook for async data fetching/state
+ *
+ * ROLE: Simplifies async logic in components (loading, error, data, refetch)
+ * PURPOSE: Centralizes async state management for API calls or async tasks
+ * DEPENDENCIES: React (useState, useEffect, useCallback)
+ *
+ * TODOs:
+ *   - [ ] Add cancellation support to avoid state updates on unmounted components
+ *   - [ ] Add retry/backoff logic for failed requests
+ *   - [ ] Add tests for edge cases (errors, rapid refetch, etc.)
+ *   - [ ] Add support for aborting previous requests
+ *
+ * Patterns: Custom hook, stateful async, dependency array
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 
 interface UseAsyncState<T> {
@@ -6,6 +23,7 @@ interface UseAsyncState<T> {
   error: string | null;
 }
 
+// useAsync: hook to manage async state (data, loading, error, refetch)
 export function useAsync<T>(
   asyncFunction: () => Promise<T>,
   dependencies: any[] = []
@@ -16,6 +34,7 @@ export function useAsync<T>(
     error: null,
   });
 
+  // execute: runs the async function and updates state
   const execute = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
@@ -31,6 +50,7 @@ export function useAsync<T>(
     }
   }, dependencies);
 
+  // Run on mount and when dependencies change
   useEffect(() => {
     execute();
   }, [execute]);
@@ -41,6 +61,7 @@ export function useAsync<T>(
   };
 }
 
+// useAsyncCallback: hook for async logic in event handlers or callbacks
 export function useAsyncCallback<T, Args extends any[]>(
   asyncFunction: (...args: Args) => Promise<T>
 ): [

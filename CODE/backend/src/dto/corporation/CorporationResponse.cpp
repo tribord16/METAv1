@@ -1,3 +1,25 @@
+
+/************************************************************
+ * @file CorporationResponse.cpp
+ * @brief Implémentation du DTO de réponse pour les corporations
+ *
+ * Rôle :
+ *   - Sérialiser les données de corporation pour l'API
+ *   - Fournir une structure uniforme pour les réponses API
+ *
+ * Place dans l'architecture :
+ *   - Utilisé par CorporationController pour retourner les réponses de corporation
+ *
+ * Dépendances :
+ *   - json/json.h (sérialisation JSON)
+ *   - models/Corporations (accès aux données)
+ *   - chrono (conversion date)
+ *
+ * TODO :
+ *   - Ajouter des champs pour la pagination ou les meta-infos
+ *   - Ajouter des tests unitaires sur la sérialisation
+ ************************************************************/
+
 #include "dto/corporation/CorporationResponse.h"
 #include <chrono>
 

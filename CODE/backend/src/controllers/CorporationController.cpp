@@ -1,47 +1,29 @@
-/**
+
+/************************************************************
  * @file CorporationController.cpp
  * @brief Implémentation du contrôleur API pour la gestion des corporations
- * @author MetaLeague Backend Team
- * @date 2025
- * 
- * 
- * RESPONSABILITÉS :
- * - Gérer les routes d'API REST pour les corporations
- * - Orchestrer la logique métier via CorporationService
- * - Valider les requêtes et retourner des réponses formatées
- * 
- * ROUTES GÉRÉES :
- * - POST   /api/corporations                : Créer une corporation
- * - GET    /api/corporations                : Lister mes corporations
- * - GET    /api/corporations/{id}           : Détails d'une corporation
- * - GET    /api/corporations/{id}/dashboard : Dashboard complet
- * - PUT    /api/corporations/{id}           : Modifier une corporation
- * - DELETE /api/corporations/{id}           : Supprimer une corporation
- * ARCHITECTURE :
- * - Hérite de drogon::HttpController<CorporationController>
- * - Utilise METHOD_LIST_BEGIN / METHOD_ADD pour déclarer les routes
- * - Chaque handler correspond à une route HTTP
- * DÉPENDANCES :
- * - services/CorporationService : Logique métier pour les corporations
- * - models/Corporation : Modèle de données pour les corporations
- * - dto/corporation : Contrats d'API pour les requêtes/réponses
- *  UTILISATION :
- * ```cpp
- *  // Contrôleur auto-détecté par Drogon, pas d'instanciation
- *  // Les routes sont automatiquement enregistrées via METHOD_LIST
- *  // Exemple d'appel client :
- * curl -X POST http://localhost:8080/api/corporations \
- *     -H "Content-Type: application/json" \
- *    -d '{"name":"Team Quantum", "user_id":42, "esports_active":true}'
- * * ```
- * * BONNES PRATIQUES :
- * * - Thread-safe (stateless, pas de variables globales)
- * - Validation systématique des entrées via DTOs
- * - Gestion d'erreurs homogène avec codes HTTP appropriés
- * - Logging détaillé pour debugging et sécurité
- * - Séparation claire : contrôleur = orchestration, service = logique métier
- *  
- */
+ *
+ * Rôle :
+ *   - Gérer toutes les routes REST liées aux corporations (CRUD, dashboard)
+ *   - Orchestrer la logique métier via CorporationService
+ *   - Valider les requêtes et retourner des réponses formatées
+ *
+ * Place dans l'architecture :
+ *   - Contrôleur HTTP principal pour le domaine "corporation"
+ *   - Appelé automatiquement par Drogon via la macro PATH_LIST
+ *
+ * Dépendances :
+ *   - services/CorporationService (logique métier)
+ *   - models/Corporation (modèle de données)
+ *   - dto/corporation (contrats API)
+ *   - middlewares/JwtMiddleware, RateLimitMiddleware (sécurité)
+ *
+ * TODO :
+ *   - Ajouter des validations avancées sur les entrées (nom, unicité, etc.)
+ *   - Ajouter des logs d'accès et de modification
+ *   - Ajouter des tests unitaires sur chaque handler
+ *   - Factoriser la gestion des erreurs et des permissions
+ ************************************************************/
 
 #include "controllers/CorporationController.h"
 #include "utils/Logger.h"
@@ -84,6 +66,9 @@ void CorporationController::create(const HttpRequestPtr& req, std::function<void
         return;
     }
 
+    // TODO: Ajouter validation avancée (unicité du nom, format, etc.)
+    // TODO: Logger la création de corporation
+
     // Récupérer l'ID utilisateur depuis le token JWT
     int userId = getUserIdFromToken(req);
     if (userId <= 0) {
@@ -117,6 +102,7 @@ void CorporationController::list(const HttpRequestPtr& req, std::function<void(c
         for (const auto& corp : corporations) {
             jsonArray.append(corp.toJson());
         }
+        // TODO: Logger l'accès à la liste des corporations
         auto apiResp = dto::common::ApiResponse::success("Corporations fetched", jsonArray);
         auto response = HttpResponse::newHttpJsonResponse(apiResp.toJson());
         response->setStatusCode(HttpStatusCode::k200OK);
@@ -250,19 +236,17 @@ HttpResponsePtr CorporationController::createErrorResponse(const std::string& me
 }
 
 void CorporationController::handleOptions(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback) {
-    Logger::info("[CorporationController] OPTIONS request handled directly");
-    
+    /*Logger::info("[CorporationController] OPTIONS request handled directly");
     auto resp = HttpResponse::newHttpResponse();
     resp->setStatusCode(HttpStatusCode::k200OK);
-    
-    // Headers CORS explicites
-    resp->addHeader("Access-Control-Allow-Origin", "*");
+    // CORS headers dynamiques pour compatibilité credentials
+    std::string origin = req->getHeader("origin");
+    if (origin.empty()) origin = "http://localhost:3000";
+    resp->addHeader("Access-Control-Allow-Origin", origin);
     resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    resp->addHeader("Access-Control-Allow-Credentials", "true");
     resp->addHeader("Access-Control-Max-Age", "86400");
-    
-    // Body vide
     resp->setBody("");
-    
-    callback(resp);
+    callback(resp);*/
 }

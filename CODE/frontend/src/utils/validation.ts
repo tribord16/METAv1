@@ -1,3 +1,20 @@
+/**
+ * @file validation.ts
+ * @brief Utility functions for form and field validation (MetaLeague frontend)
+ *
+ * ROLE: Centralizes all validation logic for forms and user input
+ * PURPOSE: Ensures consistent and secure validation across the app
+ * DEPENDENCIES: Regex, JS string/array
+ *
+ * TODOs:
+ *   - [ ] Add i18n for error messages
+ *   - [ ] Add tests for all validators
+ *   - [ ] Add async validation (e.g. username/email uniqueness)
+ *   - [ ] Add password strength meter
+ *
+ * Patterns: Utility functions, error array pattern
+ */
+
 export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);

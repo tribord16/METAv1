@@ -1,8 +1,25 @@
-// ====== ./src/dto/auth/RegisterRequest.cpp ======
-/**
+
+/************************************************************
  * @file RegisterRequest.cpp
  * @brief Implémentation du DTO RegisterRequest avec validation complète
- */
+ *
+ * Rôle :
+ *   - Désérialiser les données d'inscription depuis le JSON
+ *   - Valider la présence et le format des champs requis (username, email, password)
+ *   - Fournir des messages d'erreur détaillés pour l'API
+ *
+ * Place dans l'architecture :
+ *   - Utilisé par AuthController pour parser et valider les requêtes d'inscription
+ *
+ * Dépendances :
+ *   - json/json.h (sérialisation JSON)
+ *   - utils/Logger (logs)
+ *   - regex (validation email)
+ *
+ * TODO :
+ *   - Ajouter la validation de la force du mot de passe (majuscule, chiffre, etc.)
+ *   - Ajouter des tests unitaires sur la désérialisation et la validation
+ ************************************************************/
 
 #include "dto/auth/RegisterRequest.h"
 #include <regex>

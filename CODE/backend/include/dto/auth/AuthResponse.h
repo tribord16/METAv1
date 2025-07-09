@@ -1,15 +1,23 @@
-// ====== ./include/dto/auth/AuthResponse.h ======
-/**
+
+/************************************************************
  * @file AuthResponse.h
  * @brief DTO de réponse d'authentification unifié
- * 
- * Utilisé pour TOUTES les réponses d'authentification :
- * - Succès d'inscription (avec token + user data)
- * - Succès de connexion (avec token + user data)
- * - Échecs d'authentification (avec message d'erreur)
- * 
- * Pattern unifié pour cohérence API.
- */
+ *
+ * Rôle :
+ *   - Fournir une structure de réponse uniforme pour toutes les opérations d'authentification
+ *   - Faciliter la sérialisation JSON des réponses (succès/erreur)
+ *
+ * Place dans l'architecture :
+ *   - Utilisé par AuthController pour retourner les réponses d'authentification
+ *
+ * Dépendances :
+ *   - json/json.h (sérialisation JSON)
+ *   - dto/user/UserResponse (données utilisateur)
+ *
+ * TODO :
+ *   - Ajouter des champs pour la gestion du refresh token
+ *   - Ajouter des tests unitaires sur la sérialisation
+ ************************************************************/
 
 #pragma once
 #include "dto/user/UserResponse.h"

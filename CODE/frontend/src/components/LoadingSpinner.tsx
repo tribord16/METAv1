@@ -1,11 +1,30 @@
+/**
+ * @file LoadingSpinner.tsx
+ * @brief Loading spinner and full-page loading components for MetaLeague frontend
+ *
+ * ROLE: Shows a loading indicator (spinner or full page) during async operations.
+ * PURPOSE: Improves UX by providing feedback during loading states.
+ * DEPENDENCIES: React
+ *
+ * TODOs:
+ *   - [ ] Add animation customization (speed, color)
+ *   - [ ] Add accessibility improvements (aria-busy, etc.)
+ *   - [ ] Add tests for loading states
+ *   - [ ] Add i18n for loading messages
+ *
+ * Patterns: Functional component, props for size/message
+ */
+
 import React from 'react';
 
+// LoadingSpinnerProps: size (small/medium/large), message, className
 interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large';
   message?: string;
   className?: string;
 }
 
+// LoadingSpinner: shows a spinning loader with optional message
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
   size = 'medium', 
   message = 'Loading...', 
@@ -16,7 +35,6 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     medium: 'h-12 w-12',
     large: 'h-32 w-32'
   };
-
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <div 
@@ -29,12 +47,14 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   );
 };
 
+// FullPageLoadingProps: message (optional)
 interface FullPageLoadingProps {
   message?: string;
 }
 
+// FullPageLoading: covers the whole page with a loading spinner
 export const FullPageLoading: React.FC<FullPageLoadingProps> = ({ 
-  message = 'Loading...' 
+  message = 'Loading...'
 }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">

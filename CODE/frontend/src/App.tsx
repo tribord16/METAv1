@@ -1,3 +1,20 @@
+/**
+ * @file App.tsx
+ * @brief Main React application entry point for MetaLeague frontend
+ *
+ * ROLE: Sets up global providers (auth, corporation), routing, and protected routes.
+ * PURPOSE: Centralizes all navigation and context logic for the app.
+ * DEPENDENCIES: React, react-router-dom, AuthContext, CorporationContext, all page components
+ *
+ * TODOs:
+ *   - [ ] Add error boundaries for all routes
+ *   - [ ] Add analytics or logging for route changes
+ *   - [ ] Improve UX for loading and error states
+ *   - [ ] Add tests for route protection logic
+ *
+ * Patterns: Context Provider, ProtectedRoute, Nested Routing
+ */
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -10,33 +27,38 @@ import CreateCorporation from './pages/corporation/CreateCorporation';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { FullPageLoading } from './components';
 
+
+// ProtectedRoute: Only renders children if user is authenticated, else redirects to login
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
-  
   if (loading) {
     return <FullPageLoading />;
   }
-  
+  // TODO: Add more granular error handling for auth failures
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
+
+// CorporationRoute: Ensures a corporation is selected/created before rendering children
 const CorporationRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentCorporation, corporations, loading } = useCorporation();
-  
   if (loading) {
+    // Affiche un écran de chargement pendant la récupération des corporations
     return <FullPageLoading message="Loading corporations..." />;
   }
-  
-  // If no corporations exist, redirect to create one
+  // Si l'utilisateur n'a aucune corporation, on le redirige vers la création
   if (corporations.length === 0) {
+    // TODO: UX - afficher une notification ou un message avant la redirection
+    // Exemple: toast.info('Vous devez créer une corporation pour continuer');
     return <Navigate to="/corporation/create" replace />;
   }
-  
-  // If no current corporation selected, redirect to select
+  // Si aucune corporation sélectionnée, on redirige vers la sélection
   if (!currentCorporation) {
+    // TODO: UX - afficher une notification ou un message avant la redirection
+    // Exemple: toast.info('Veuillez sélectionner une corporation');
     return <Navigate to="/corporation/select" replace />;
   }
-  
+  // Si tout est OK, on affiche les enfants
   return <>{children}</>;
 };
 

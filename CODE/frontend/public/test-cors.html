@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CORS Direct</title>
+</head>
+<body>
+    <h1>Test CORS Direct (sans React/Axios)</h1>
+    <button onclick="testLogin()">Test Login avec fetch()</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'En cours...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/controllers/authcontroller/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'test',
+                        password: 'test'
+                    })
+                });
+                
+                const data = await response.text();
+                resultDiv.innerHTML = `
+                    <h3>Succès!</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Response: ${data}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Erreur:</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

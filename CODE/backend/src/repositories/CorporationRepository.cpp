@@ -1,3 +1,26 @@
+/**************************************************************
+# @file CorporationRepository.cpp
+# @brief Corporation repository implementation using Drogon ORM (MetaLeague backend)
+#
+# ROLE: Encapsulates all database access for corporation entities. Provides async CRUD operations and lookups.
+# PURPOSE: Abstracts SQL/database logic from business logic. Ensures type safety, error handling, and security.
+# DEPENDENCIES: Drogon ORM, Logger, Corporations model
+#
+# PATTERNS: Repository pattern, async callbacks, dependency injection
+#
+# TODOs:
+#  - [ ] Add input validation for corporation fields (name, etc.)
+#  - [ ] Add unit tests for all repository methods
+#  - [ ] Add logging for all DB operations (success/failure)
+#  - [ ] Add pagination for corporation queries
+#  - [ ] Add error code mapping for DB errors
+#
+# SECURITY:
+#  - Uses prepared statements (prevents SQL injection)
+#  - No SQL string concatenation
+#  - Input validation required (see TODO)
+#  - Logs all errors for audit
+#**************************************************************/
 #include "repositories/CorporationRepository.h"
 #include "utils/Logger.h"
 

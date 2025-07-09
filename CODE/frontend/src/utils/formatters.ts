@@ -1,3 +1,19 @@
+/**
+ * @file formatters.ts
+ * @brief Utility functions for formatting numbers, currency, and percentages (MetaLeague frontend)
+ *
+ * ROLE: Centralizes all number/currency formatting logic for UI display
+ * PURPOSE: Provides helpers for consistent and localized formatting
+ * DEPENDENCIES: Intl.NumberFormat
+ *
+ * TODOs:
+ *   - [ ] Add i18n/localization support
+ *   - [ ] Add tests for edge cases (large/small numbers)
+ *   - [ ] Add support for custom formats
+ *
+ * Patterns: Utility functions, formatter pattern
+ */
+
 export const formatCurrency = (
   amount: number,
   currency: string = 'EUR',

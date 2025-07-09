@@ -1,7 +1,24 @@
-/**
+
+/************************************************************
  * @file LoginRequest.cpp
- * @brief Implémentation LoginRequest
- */
+ * @brief Implémentation du DTO de requête de connexion utilisateur
+ *
+ * Rôle :
+ *   - Désérialiser les données de connexion depuis le JSON
+ *   - Valider la présence des champs requis (username, password)
+ *   - Fournir des messages d'erreur détaillés pour l'API
+ *
+ * Place dans l'architecture :
+ *   - Utilisé par AuthController pour parser et valider les requêtes de login
+ *
+ * Dépendances :
+ *   - json/json.h (sérialisation JSON)
+ *   - utils/Logger (logs)
+ *
+ * TODO :
+ *   - Ajouter la validation de la force du mot de passe côté client
+ *   - Ajouter des tests unitaires sur la désérialisation et la validation
+ ************************************************************/
 
 #include "dto/auth/LoginRequest.h"
 #include "utils/Logger.h"

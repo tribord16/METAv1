@@ -1,15 +1,23 @@
 /**
  * @file CorporationSelect.tsx
- * @brief Page sélection de corporation - équivalent "Load Game"
- * @author MetaLeague Frontend Team
- * @date 2025
- * @version 1.0
+ * @brief Page de sélection de corporation (équivalent "Load Game")
  *
- * RESPONSABILITÉS :
- * - Afficher toutes les corporations du joueur
- * - Permettre création nouvelle corporation
- * - Charger une partie existante
- * - Afficher infos rapides (budget, dernière session)
+ * Rôle :
+ *   - Affiche la liste des corporations de l'utilisateur connecté
+ *   - Permet de sélectionner une corporation pour accéder au dashboard
+ *   - Permet de créer une nouvelle corporation
+ *   - Affiche des informations rapides (budget, réputation, saison, dernière session)
+ *
+ * Dépendances :
+ *   - useCorporation (context global)
+ *   - Corporation (type)
+ *   - React Router (navigation)
+ *
+ * UX :
+ *   - Affiche un loader pendant le chargement
+ *   - Affiche les erreurs éventuelles
+ *   - TODO: Améliorer l'accessibilité (focus, aria, etc.)
+ *   - TODO: Ajouter des tests unitaires et d'intégration
  */
 
 import React, { useState, useEffect } from 'react';
@@ -19,27 +27,42 @@ import { useCorporation } from '../../context/CorporationContext';
 
 interface CorporationSelectProps {}
 
+/**
+ * Composant principal de sélection de corporation
+ * @returns JSX.Element
+ */
 const CorporationSelect: React.FC<CorporationSelectProps> = () => {
     const { corporations, loading, error, loadCorporations, selectCorporation } = useCorporation();
     const navigate = useNavigate();
 
+    // Chargement des corporations à l'arrivée sur la page
     useEffect(() => {
         loadCorporations();
+        // TODO: Ajouter gestion d'annulation si le composant est démonté
     }, [loadCorporations]);
 
+    /**
+     * Handler pour sélectionner une corporation et naviguer vers le dashboard
+     * @param corpId ID de la corporation à sélectionner
+     */
     const handleSelectCorporation = async (corpId: number) => {
         try {
             await selectCorporation(corpId);
             navigate('/dashboard');
         } catch (err) {
+            // TODO: Afficher une notification utilisateur (snackbar/toast)
             console.error('Failed to select corporation:', err);
         }
     };
 
+    /**
+     * Handler pour naviguer vers la page de création de corporation
+     */
     const handleCreateNew = () => {
         navigate('/corporation/create');
     };
 
+    // Affichage d'un loader pendant le chargement
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -57,6 +80,7 @@ const CorporationSelect: React.FC<CorporationSelectProps> = () => {
                 
                 {error && (
                     <div className="bg-red-600 text-white p-4 rounded mb-6">
+                        {/* TODO: Afficher les erreurs de façon plus UX (snackbar/toast) */}
                         {error}
                     </div>
                 )}
@@ -92,6 +116,7 @@ const CorporationSelect: React.FC<CorporationSelectProps> = () => {
                     <div className="text-center text-gray-400 mt-12">
                         <h2 className="text-2xl mb-4">No corporations yet</h2>
                         <p>Create your first corporation to start playing!</p>
+                        {/* TODO: Ajouter un call-to-action plus visible pour créer une corporation */}
                     </div>
                 )}
             </div>
@@ -104,6 +129,19 @@ interface CorporationCardProps {
     onSelect: () => void;
 }
 
+/**
+ * Carte d'affichage d'une corporation
+ * @param corporation Données de la corporation à afficher
+ * @param onSelect Callback pour sélectionner la corporation
+ * @returns JSX.Element
+ *
+ * TODO: Centraliser le formatBudget dans un utilitaire commun (formatters)
+ * TODO: Centraliser le formatLastPlayed dans un utilitaire commun (dateUtils)
+ * TODO: Ajouter un tooltip sur le nom si trop long
+ * TODO: Gérer les cas où les champs sont manquants (name, season, last_played)
+ * TODO: Ajouter des tests unitaires pour ce composant
+ * TODO: Ajouter l'accessibilité (aria, focus, etc.)
+ */
 const CorporationCard: React.FC<CorporationCardProps> = ({ corporation, onSelect }) => {
     // TODO: Centraliser ce formatter dans un utilitaire commun si besoin
     const formatBudget = (amount?: number) => {
@@ -128,6 +166,10 @@ const CorporationCard: React.FC<CorporationCardProps> = ({ corporation, onSelect
         return `${diffDays} days ago`;
     };
 
+    /**
+     * Retourne la couleur de réputation selon le score
+     * @param reputation Score de réputation (0-100)
+     */
     const getReputationColor = (reputation: number) => {
         if (reputation >= 80) return 'text-green-400';
         if (reputation >= 60) return 'text-yellow-400';
@@ -140,6 +182,7 @@ const CorporationCard: React.FC<CorporationCardProps> = ({ corporation, onSelect
             onClick={onSelect}
             className="bg-gray-800 hover:bg-gray-700 cursor-pointer transition-colors p-6 rounded-lg border border-gray-600"
         >
+            {/* TODO: Ajouter un tooltip sur le nom si trop long */}
             <h3 className="text-xl font-bold text-white mb-4">{corporation.name || 'No name' /* TODO: handle missing name */}</h3>
             <div className="space-y-3">
                 <div className="flex justify-between">

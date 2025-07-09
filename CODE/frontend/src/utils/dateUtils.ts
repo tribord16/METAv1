@@ -1,3 +1,19 @@
+/**
+ * @file dateUtils.ts
+ * @brief Utility functions for date formatting and manipulation (MetaLeague frontend)
+ *
+ * ROLE: Centralizes all date formatting logic for UI display
+ * PURPOSE: Provides helpers for consistent date/time display and relative time
+ * DEPENDENCIES: Intl.DateTimeFormat, JS Date
+ *
+ * TODOs:
+ *   - [ ] Add i18n/localization support
+ *   - [ ] Add tests for edge cases (invalid dates, timezones)
+ *   - [ ] Add support for custom formats
+ *
+ * Patterns: Utility functions, defensive programming
+ */
+
 export const formatDate = (
   date: string | Date,
   options?: Intl.DateTimeFormatOptions

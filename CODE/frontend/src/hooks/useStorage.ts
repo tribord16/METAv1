@@ -1,5 +1,23 @@
+/**
+ * @file useStorage.ts
+ * @brief Custom React hooks for localStorage and sessionStorage
+ *
+ * ROLE: Simplifies persistent state management in React (local/session)
+ * PURPOSE: Centralizes logic for reading/writing browser storage with type safety
+ * DEPENDENCIES: React (useState, useEffect)
+ *
+ * TODOs:
+ *   - [ ] Add support for storage event (sync across tabs)
+ *   - [ ] Add error boundary for JSON parse/stringify
+ *   - [ ] Add tests for edge cases (quota, invalid JSON, etc.)
+ *   - [ ] Add support for removing keys
+ *
+ * Patterns: Custom hook, persistent state, functional setter
+ */
+
 import { useState, useEffect } from 'react';
 
+// useLocalStorage: hook for persistent state in localStorage
 export function useLocalStorage<T>(
   key: string,
   initialValue: T
@@ -15,7 +33,7 @@ export function useLocalStorage<T>(
     }
   });
 
-  // Return a wrapped version of useState's setter function that persists the new value to localStorage
+  // setValue: persists new value to localStorage
   const setValue = (value: T | ((val: T) => T)) => {
     try {
       // Allow value to be a function so we have the same API as useState
@@ -30,6 +48,7 @@ export function useLocalStorage<T>(
   return [storedValue, setValue];
 }
 
+// useSessionStorage: hook for persistent state in sessionStorage
 export function useSessionStorage<T>(
   key: string,
   initialValue: T

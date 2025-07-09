@@ -10,10 +10,10 @@
     "log_level": "TRACE"
   },
   "middlewares": [
-    "middlewares::CorsMiddleware",
     "middlewares::JwtMiddleware",
     "middlewares::RateLimitFilter"
   ],
+
   "db_clients": [
     {
       "name": "default",

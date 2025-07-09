@@ -1,17 +1,28 @@
-// include/middlewares/RateLimitMiddleware.h
-/**
+
+/************************************************************
  * @file RateLimitMiddleware.h
- * @brief Middleware de limitation du taux de requêtes pour éviter le spam et brute force
- * 
- * FONCTIONNALITÉS :
- * - Limite par IP (ex: 100 req/heure global, 5 login/minute)
- * - Bannissement temporaire après X tentatives
- * - Headers informatifs (X-RateLimit-Remaining, etc.)
- * - Configuration par endpoint
- * 
- * UTILISATION :
- * PATH_ADD("/api/auth/login", Post, "middlewares::RateLimitMiddleware");
- */
+ * @brief Middleware de limitation du taux de requêtes (anti-spam, anti-brute-force)
+ *
+ * Rôle :
+ *   - Limiter le nombre de requêtes par IP (globale et endpoints sensibles)
+ *   - Bannir temporairement les IPs après abus ou brute-force
+ *   - Ajouter des headers informatifs de rate limiting
+ *   - Nettoyer périodiquement les entrées obsolètes
+ *
+ * Place dans l'architecture :
+ *   - Middleware de sécurité, utilisé sur les endpoints critiques (auth, etc.)
+ *   - S'exécute avant le contrôleur, court-circuite en cas d'abus
+ *
+ * Dépendances :
+ *   - Drogon (HttpMiddleware)
+ *   - dto/common/ApiResponse (formatage des erreurs)
+ *   - utils/Logger (logs)
+ *
+ * TODO :
+ *   - Rendre la configuration dynamique (par fichier ou env)
+ *   - Logger les tentatives de brute-force avec plus de détails (User-Agent, etc.)
+ *   - Ajouter des tests unitaires sur tous les cas limites
+ ************************************************************/
 
 #pragma once
 #include <drogon/HttpMiddleware.h>

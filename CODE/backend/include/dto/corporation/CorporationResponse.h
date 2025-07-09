@@ -1,42 +1,23 @@
-/**
+
+/************************************************************
  * @file CorporationResponse.h
  * @brief DTO de réponse pour les corporations
- * @author Meta League Backend Team
- * @date 2025
- * @version 1.0
- * 
- * RESPONSABILITÉS :
- * - Définir le contrat de réponse pour les opérations sur les corporations
- * - Sérialiser les données de la corporation pour l'API
- * - Fournir une structure uniforme pour les réponses API
- * 
- * STRUCTURE :
- * ```json
- * {
- *   "id": 1,
- *   "name": "Team Quantum",
- *   "esports_active": true,
- *   "racing_active": false,
- *   "tactical_active": true,
- *   "innovation_active": false,
- *   "budget": 1000000.0,
- *   "created_at": "2025-01-01T12:00:00Z",
- *   "updated_at": "2025-01-01T12:00:00Z",
- *   "owner_id": 42
- * }
- * ```
- * 
- * UTILISATION :
- * - Sérialisation automatique par Drogon lors des réponses HTTP
- * - Utilisé dans les contrôleurs pour retourner les données de corporation
- * - Ne jamais exposer directement les modèles de données
- * 
- * BONNES PRATIQUES :
- * - Toujours utiliser des DTOs pour les réponses API
- * - Valider les données avant de les envoyer
- * - Maintenir une structure cohérente pour toutes les réponses
- * 
- */
+ *
+ * Rôle :
+ *   - Sérialiser les données de corporation pour l'API
+ *   - Fournir une structure uniforme pour les réponses API
+ *
+ * Place dans l'architecture :
+ *   - Utilisé par CorporationController pour retourner les réponses de corporation
+ *
+ * Dépendances :
+ *   - json/json.h (sérialisation JSON)
+ *   - models/Corporations (accès aux données)
+ *
+ * TODO :
+ *   - Ajouter des champs pour la pagination ou les meta-infos
+ *   - Ajouter des tests unitaires sur la sérialisation
+ ************************************************************/
 
 #pragma once
 #include <json/json.h>

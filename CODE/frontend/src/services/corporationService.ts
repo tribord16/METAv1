@@ -1,4 +1,22 @@
-// src/services/corporationService.ts
+/**
+ * @file corporationService.ts
+ * @brief Service pour la gestion des corporations (MetaLeague frontend)
+ *
+ * ROLE: Fournit les méthodes pour créer, lister, et gérer les corporations côté client
+ * PURPOSE: Centralise la logique d'appel API pour les corporations
+ * DEPENDENCIES: apiClient, Corporation types
+ *
+ * TODOs:
+ *   - [ ] Ajouter la pagination et le filtrage côté client
+ *   - [ ] Ajouter des logs pour toutes les actions
+ *   - [ ] Ajouter des tests unitaires pour chaque méthode
+ *   - [ ] Gérer les erreurs réseau et serveur de façon plus fine
+ *   - [ ] Ajouter la gestion des droits/permissions
+ *
+ * Patterns: Service singleton, typage fort, promesse
+ */
+
+ // src/services/corporationService.ts
 import { apiClient } from './apiClient';
 import { Corporation } from '../types';
 import { get } from 'http';

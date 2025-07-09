@@ -1,23 +1,28 @@
-/**
+
+/************************************************************
  * @file AuthController.cpp
  * @brief Implémentation du contrôleur d'authentification (routes /api/auth)
- * @author Meta League Backend Team
- * @date 2025
  *
- * RESPONSABILITÉS :
- * - Gérer toutes les routes d'authentification (inscription, connexion, profil utilisateur courant)
- * - Valider les requêtes et orchestrer la logique métier via AuthService
+ * Rôle :
+ *   - Gérer toutes les routes d'authentification (inscription, connexion, profil utilisateur courant)
+ *   - Valider les requêtes et orchestrer la logique métier via AuthService
  *
- * UTILISATION :
- * - Instancié automatiquement par Drogon via la macro PATH_LIST dans AuthController.h
- * - Ne gère QUE les routes /api/auth
+ * Place dans l'architecture :
+ *   - Instancié automatiquement par Drogon via la macro PATH_LIST dans AuthController.h
+ *   - Ne gère QUE les routes /api/auth
  *
- * DÉPENDANCES :
- * - services/AuthService (logique métier)
- * - repositories/UserRepository (accès DB)
- * - dto/auth/(contrats API)
- * - middlewares/JwtMiddleware (protection JWT)
- */
+ * Dépendances :
+ *   - services/AuthService (logique métier)
+ *   - repositories/UserRepository (accès DB)
+ *   - dto/auth/(contrats API)
+ *   - middlewares/JwtMiddleware (protection JWT)
+ *
+ * TODO :
+ *   - Ajouter des validations avancées sur les entrées utilisateur
+ *   - Ajouter des logs de sécurité sur les tentatives échouées
+ *   - Ajouter des tests unitaires sur chaque handler
+ *   - Factoriser la gestion des erreurs et des réponses
+ ************************************************************/
 
 #include "controllers/AuthController.h"
 #include "dto/auth/LoginRequest.h"
@@ -77,12 +82,15 @@ void AuthController::registerUser(const HttpRequestPtr& req, std::function<void(
         callback(createErrorResponse(std::string("Invalid request data: ") + e.what(), HttpStatusCode::k400BadRequest));
         return;
     }
-    // Valider le DTO
+    // Valider le DTO (validation métier)
     if (!registerRequest.isValid()) {
         auto errors = registerRequest.getErrors();
         callback(createValidationErrorResponse(errors));
         return;
     }
+
+    // TODO: Ajouter validation avancée (force du mot de passe, unicité email)
+    // TODO: Logger les tentatives d'inscription échouées
 
     // Appeler le service d'authentification pour l'inscription
     getAuthService()->registerUser(registerRequest, [this, callback](const dto::auth::AuthResponse& response) {
@@ -95,7 +103,6 @@ void AuthController::registerUser(const HttpRequestPtr& req, std::function<void(
             callback(this->createErrorResponse(response.message, HttpStatusCode::k400BadRequest));
         }
     });
-
 }
 
 /**
@@ -117,12 +124,15 @@ void AuthController::login(const HttpRequestPtr& req, std::function<void(const H
         callback(createErrorResponse(std::string("Invalid request data: ") + e.what(), HttpStatusCode::k400BadRequest));
         return;
     }
-    // Valider le DTO
+    // Valider le DTO (validation métier)
     if (!loginRequest.isValid()) {
         auto errors = loginRequest.getErrors();
         callback(createValidationErrorResponse(errors));
         return;
     }
+    // TODO: Ajouter limitation brute-force (rate limit)
+    // TODO: Logger les tentatives de connexion échouées
+
     // Appeler le service d'authentification pour la connexion
     getAuthService()->login(loginRequest, [this, callback](const dto::auth::AuthResponse& response) {
         if (response.is_success) {
@@ -148,13 +158,15 @@ void AuthController::me(const HttpRequestPtr& req, std::function<void(const Http
         callback(createErrorResponse("Unauthorized", HttpStatusCode::k401Unauthorized));
         return;
     }
-    
     // Récupérer l'ID utilisateur avec le bon type
     int userId = attrs->get<int>("user_id");
     if (userId <= 0) {
         callback(createErrorResponse("Invalid user ID", HttpStatusCode::k400BadRequest));
         return;
     }
+
+    // TODO: Vérifier les permissions et la validité du token JWT
+    // TODO: Ajouter la récupération complète du profil utilisateur depuis la base
 
     // Ici, tu peux soit retourner les infos du token, soit requêter la base si besoin
     // Pour l'exemple, on retourne juste l'ID utilisateur
@@ -201,26 +213,6 @@ HttpResponsePtr AuthController::createValidationErrorResponse(const std::vector<
     auto httpResp = HttpResponse::newHttpJsonResponse(apiResp.toJson());
     httpResp->setStatusCode(HttpStatusCode::k400BadRequest);
     return httpResp;
-}
-
-
-void AuthController::handleOptions(const HttpRequestPtr& req,
-                                  std::function<void(const HttpResponsePtr&)>&& callback) {
-    Logger::info("[AuthController] OPTIONS request handled directly");
-    
-    auto resp = HttpResponse::newHttpResponse();
-    resp->setStatusCode(HttpStatusCode::k200OK);
-    
-    // Headers CORS explicites
-    resp->addHeader("Access-Control-Allow-Origin", "*");
-    resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-    resp->addHeader("Access-Control-Max-Age", "86400");
-    
-    // Body vide
-    resp->setBody("");
-    
-    callback(resp);
 }
 
 

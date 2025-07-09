@@ -1,9 +1,26 @@
+/**
+ * @file NotFoundPage.tsx
+ * @brief 404 Not Found page for MetaLeague frontend
+ *
+ * ROLE: Displays a user-friendly message when a route is not found.
+ * PURPOSE: Improves UX by guiding users back to valid pages.
+ * DEPENDENCIES: React, react-router-dom
+ *
+ * TODOs:
+ *   - [ ] Add illustration or mascot for branding
+ *   - [ ] Add logging for 404 events
+ *   - [ ] Add i18n for error messages
+ *   - [ ] Add tests for navigation buttons
+ *
+ * Patterns: Functional component, navigation hooks
+ */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// NotFoundPage: 404 error page with navigation options
 export const NotFoundPage: React.FC = () => {
   const navigate = useNavigate();
-
+  // TODO: Add analytics/logging for 404 navigation
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <div className="text-center">

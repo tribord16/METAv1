@@ -1,7 +1,23 @@
-/**
+
+/************************************************************
  * @file ApiResponse.cpp
- * @brief Implémentation ApiResponse
- */
+ * @brief Implémentation du DTO de réponse API générique
+ *
+ * Rôle :
+ *   - Fournir une structure de réponse uniforme pour toutes les routes API
+ *   - Faciliter la sérialisation JSON des réponses (succès/erreur)
+ *
+ * Place dans l'architecture :
+ *   - Utilisé par tous les contrôleurs/services pour retourner des réponses HTTP
+ *
+ * Dépendances :
+ *   - json/json.h (sérialisation JSON)
+ *   - string, vector
+ *
+ * TODO :
+ *   - Ajouter des champs pour pagination, meta, etc. si besoin
+ *   - Ajouter des tests unitaires sur la sérialisation
+ ************************************************************/
 
 #include "dto/common/ApiResponse.h"
 

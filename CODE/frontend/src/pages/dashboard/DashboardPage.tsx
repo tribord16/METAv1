@@ -1,3 +1,20 @@
+/**
+ * @file DashboardPage.tsx
+ * @brief Main dashboard page for MetaLeague frontend
+ *
+ * ROLE: Displays corporation and user stats, and provides navigation to key features.
+ * PURPOSE: Centralizes all dashboard logic and data display for the user.
+ * DEPENDENCIES: React, CorporationContext, Navbar, utils
+ *
+ * TODOs:
+ *   - [ ] Add loading and error states for dashboard data
+ *   - [ ] Add tests for dashboard rendering and logic
+ *   - [ ] Add accessibility improvements
+ *   - [ ] Add analytics/logging for dashboard usage
+ *   - [ ] Add role-based dashboard widgets
+ *
+ * Patterns: Context usage, conditional rendering, effect hooks
+ */
 import React, { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCorporation } from '../../context/CorporationContext';
@@ -5,14 +22,15 @@ import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../components';
 import { formatCurrency, formatDate } from '../../utils';
 
+// DashboardPage: Main dashboard for authenticated users
 export const DashboardPage: React.FC = () => {
   const { currentCorporation, currentDashboard, refreshDashboard } = useCorporation();
-
   // Helper to safely access nested dashboard fields
   const safe = <T,>(value: T | undefined | null, fallback: T) =>
     value !== undefined && value !== null ? value : fallback;
   const navigate = useNavigate();
 
+  // On mount or when corporation changes, refresh dashboard data
   useEffect(() => {
     if (currentCorporation) {
       refreshDashboard();
@@ -20,6 +38,7 @@ export const DashboardPage: React.FC = () => {
   }, [currentCorporation, refreshDashboard]);
 
   if (!currentCorporation) {
+    // TODO: UX - show message before redirecting
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

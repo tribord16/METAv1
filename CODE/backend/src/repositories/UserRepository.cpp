@@ -1,31 +1,27 @@
-// ====== ./src/repositories/UserRepository.cpp ======
-/**
+
+/**************************************************************
  * @file UserRepository.cpp
- * @brief Implémentation du repository utilisateur avec Drogon ORM
- * @author Meta League Backend Team
- * @date 2025
- * @version 1.0
+ * @brief Implémentation du repository utilisateur avec Drogon ORM (MetaLeague backend)
  *
- * IMPLÉMENTATION DÉTAILLÉE :
- * - Requêtes SQL asynchrones avec Drogon ORM
- * - Gestion complète des erreurs et callbacks
- * - Transformation Row → User avec gestion des types
- * - Logging détaillé pour debugging et monitoring
- * - Optimisations de performance (requêtes préparées, index)
+ * ROLE : Encapsule tous les accès à la base de données pour les entités utilisateur. Fournit des opérations CRUD asynchrones et des recherches utilisateur.
+ * PURPOSE : Sépare la logique SQL/DB de la logique métier. Garantit la sécurité, la robustesse et la maintenabilité.
+ * DÉPENDANCES : Drogon ORM, Logger, modèle Users
  *
- * ARCHITECTURE TECHNIQUE :
- * - execSqlAsync() : exécution non-bloquante des requêtes
- * - Callbacks séparés pour succès/erreur
- * - Gestion des contraintes DB (UNIQUE, NOT NULL)
- * - Conversion types SQL ↔ C++ automatique
+ * PATTERNS : Repository pattern, callbacks asynchrones, injection de dépendances
+ *
+ * TODOs :
+ *   - [ ] Ajouter une validation stricte des champs utilisateur (username, email, etc.)
+ *   - [ ] Ajouter des tests unitaires pour chaque méthode du repository
+ *   - [ ] Ajouter du logging pour toutes les opérations DB (succès/échec)
+ *   - [ ] Ajouter la pagination pour les requêtes utilisateurs
+ *   - [ ] Gérer les codes d’erreur DB de façon plus fine
  *
  * SÉCURITÉ :
- * - Requêtes préparées (protection injection SQL)
- * - Pas de concaténation de strings SQL
- * - Validation des paramètres d'entrée
- * - Logging des erreurs pour audit
- */
-
+ *   - Utilise des requêtes préparées (anti-injection SQL)
+ *   - Jamais de concaténation de chaînes SQL
+ *   - Validation des entrées à renforcer (voir TODO)
+ *   - Toutes les erreurs sont loguées pour audit
+ **************************************************************/
 #include "repositories/UserRepository.h"
 #include "utils/Logger.h"
 #include <chrono>
