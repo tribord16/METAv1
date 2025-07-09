@@ -85,7 +85,7 @@ public:
                     conn->prepareStatement(
                         "SELECT id, user_id, name, budget, reputation, current_season, current_week, "
                         "esports_active, racing_active, tactical_active, innovation_active, "
-                        "UNIX_TIMESTAMP(created_at) as created_at, UNIX_TIMESTAMP(updated_at) as updated_at "
+                        "UNIX_TIMESTAMP(created_at) as created_at, UNIX_TIMESTAMP(last_played) as last_played "
                         "FROM corporations WHERE user_id = ? ORDER BY created_at DESC"
                     ));
                 
@@ -116,7 +116,7 @@ public:
                     conn->prepareStatement(
                         "SELECT id, user_id, name, budget, reputation, current_season, current_week, "
                         "esports_active, racing_active, tactical_active, innovation_active, "
-                        "UNIX_TIMESTAMP(created_at) as created_at, UNIX_TIMESTAMP(updated_at) as updated_at "
+                        "UNIX_TIMESTAMP(created_at) as created_at, UNIX_TIMESTAMP(last_played) as last_played "
                         "FROM corporations WHERE id = ?"
                     ));
                 
@@ -146,7 +146,7 @@ public:
                     conn->prepareStatement(
                         "UPDATE corporations SET name = ?, budget = ?, reputation = ?, current_season = ?, "
                         "current_week = ?, esports_active = ?, racing_active = ?, tactical_active = ?, "
-                        "innovation_active = ?, updated_at = NOW() WHERE id = ?"
+                        "innovation_active = ?, last_played = NOW() WHERE id = ?"
                     ));
                 
                 stmt->setString(1, corporation.name);
@@ -180,7 +180,7 @@ private:
                 conn->prepareStatement(
                     "SELECT id, user_id, name, budget, reputation, current_season, current_week, "
                     "esports_active, racing_active, tactical_active, innovation_active, "
-                    "UNIX_TIMESTAMP(created_at) as created_at, UNIX_TIMESTAMP(updated_at) as updated_at "
+                    "UNIX_TIMESTAMP(created_at) as created_at, UNIX_TIMESTAMP(last_played) as last_played "
                     "FROM corporations WHERE user_id = ? AND name = ?"
                 ));
             
@@ -216,10 +216,10 @@ private:
         corp.innovation_active = res.getBoolean("innovation_active");
         
         auto created_timestamp = res.getInt64("created_at");
-        auto updated_timestamp = res.getInt64("updated_at");
+        auto updated_timestamp = res.getInt64("last_played");
         
         corp.created_at = std::chrono::system_clock::from_time_t(created_timestamp);
-        corp.updated_at = std::chrono::system_clock::from_time_t(updated_timestamp);
+        corp.last_played = std::chrono::system_clock::from_time_t(updated_timestamp);
         
         return corp;
     }

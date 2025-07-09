@@ -57,7 +57,7 @@ export const CorporationProvider: React.FC<CorporationProviderProps> = ({ childr
     try {
       setLoading(true);
       setError(null);
-      const corps = await corporationService.getUserCorporations();
+      const corps = await corporationService.getUserCorporations(user.id);
       setCorporations(corps);
       // TODO: Handle empty state and errors
       // Auto-select saved corporation or first one
@@ -129,7 +129,11 @@ export const CorporationProvider: React.FC<CorporationProviderProps> = ({ childr
 
   // Load corporations when user changes
   useEffect(() => {
+    console.log('User changed, loading corporations...');
+    if (corporations.length > 0) console.log('Current corporations:', corporations);
     if (user) {
+      console.log('Loading corporations for user:', user.id);
+      console.log('Current user:', user);
       loadCorporations();
     } else {
       setCorporations([]);

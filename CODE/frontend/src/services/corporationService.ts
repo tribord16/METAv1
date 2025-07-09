@@ -19,7 +19,6 @@
  // src/services/corporationService.ts
 import { apiClient } from './apiClient';
 import { Corporation } from '../types';
-import { get } from 'http';
 
 export interface CreateCorporationRequest {
   name: string;
@@ -81,9 +80,9 @@ export const corporationService = {
     return response.data.data;
   },
 
-  
-  async getUserCorporations(): Promise<Corporation[]> {
-    const response = await apiClient.get<CorporationListResponse>('/api/corporations/');
+
+  async getUserCorporations(userId: number): Promise<Corporation[]> {
+    const response = await apiClient.get<CorporationListResponse>(`/api/corporations/user/${userId}`);
     console.log(response);
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.message || 'Failed to load corporations');

@@ -22,7 +22,7 @@ struct Corporation {
     bool tactical_active = false;
     bool innovation_active = false;
     std::chrono::system_clock::time_point created_at;
-    std::chrono::system_clock::time_point updated_at;
+    std::chrono::system_clock::time_point last_played;
 
     nlohmann::json toJson() const {
         return nlohmann::json{
@@ -40,7 +40,7 @@ struct Corporation {
                 {"innovation_active", innovation_active}
             }},
             {"created_at", std::chrono::duration_cast<std::chrono::seconds>(created_at.time_since_epoch()).count()},
-            {"updated_at", std::chrono::duration_cast<std::chrono::seconds>(updated_at.time_since_epoch()).count()}
+            {"last_played", std::chrono::duration_cast<std::chrono::seconds>(last_played.time_since_epoch()).count()}
         };
     }
 };
