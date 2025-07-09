@@ -25,7 +25,8 @@ import { DashboardPage } from './pages/dashboard/DashboardPage';
 import CorporationSelect from './pages/corporation/CorporationSelect';
 import CreateCorporation from './pages/corporation/CreateCorporation';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { FullPageLoading } from './components';
+import { FullPageLoading, Header } from './components';
+import Layout from './components/Layout';
 
 
 // ProtectedRoute: Only renders children if user is authenticated, else redirects to login
@@ -98,7 +99,9 @@ const App: React.FC = () => {
               path="/corporation/select" 
               element={
                 <ProtectedRoute>
-                  <CorporationSelect />
+                  <Layout>
+                    <CorporationSelect />
+                  </Layout>
                 </ProtectedRoute>
               } 
             />

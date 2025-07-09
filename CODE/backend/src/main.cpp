@@ -114,6 +114,7 @@ private:
         std::string target = std::string(req.target());
         auto method = req.method();
 
+
         utils::Logger::debug("Routing request: " + std::string(req.method_string()) + " " + target);
 
         // Auth routes (public)
@@ -280,6 +281,8 @@ public:
             utils::Logger::error("Failed to set socket options: " + ec.message());
             return;
         }
+        
+        
 
         // Bind to the server address
         acceptor_.bind(endpoint, ec);
@@ -289,6 +292,7 @@ public:
         }
 
         // Start listening for connections
+        utils::Logger::info("Starting to listen on: " + endpoint.address().to_string() + ":" + std::to_string(endpoint.port()));
         acceptor_.listen(net::socket_base::max_listen_connections, ec);
         if (ec) {
             utils::Logger::error("Failed to listen: " + ec.message());
@@ -326,7 +330,7 @@ private:
 int main(int argc, char* argv[]) {
     try {
         // Initialize logger
-        utils::Logger::setLogLevel(utils::LogLevel::INFO);
+        utils::Logger::setLogLevel(utils::LogLevel::DEBUG);
         utils::Logger::info("Starting MetaLeague Backend Server...");
 
         // Configuration

@@ -81,9 +81,8 @@ export const corporationService = {
   },
 
 
-  async getUserCorporations(userId: number): Promise<Corporation[]> {
-    const response = await apiClient.get<CorporationListResponse>(`/api/corporations/user/${userId}`);
-    console.log(response);
+  async getUserCorporations(): Promise<Corporation[]> {
+    const response = await apiClient.get<CorporationListResponse>(`/api/corporations`);
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.message || 'Failed to load corporations');
     }

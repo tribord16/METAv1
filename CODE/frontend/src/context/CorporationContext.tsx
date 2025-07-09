@@ -20,6 +20,7 @@ import { Corporation, CorporationDashboard } from '../types';
 import { corporationService } from '../services/corporationService';
 import { useAuth } from './AuthContext';
 
+
 interface CorporationContextType {
   corporations: Corporation[];
   currentCorporation: Corporation | null;
@@ -57,7 +58,8 @@ export const CorporationProvider: React.FC<CorporationProviderProps> = ({ childr
     try {
       setLoading(true);
       setError(null);
-      const corps = await corporationService.getUserCorporations(user.id);
+      console.log('Loading corporations for user id:', user.id);
+      const corps = await corporationService.getUserCorporations();
       setCorporations(corps);
       // TODO: Handle empty state and errors
       // Auto-select saved corporation or first one
@@ -79,7 +81,7 @@ export const CorporationProvider: React.FC<CorporationProviderProps> = ({ childr
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const selectCorporation = async (id: number) => {
     try {
@@ -88,7 +90,6 @@ export const CorporationProvider: React.FC<CorporationProviderProps> = ({ childr
       const corporation = await corporationService.getCorporationById(id);
       setCurrentCorporation(corporation);
       localStorage.setItem('currentCorporationId', id.toString());
-      
       // Load dashboard for selected corporation
       await refreshDashboard();
     } catch (err) {
@@ -103,6 +104,8 @@ export const CorporationProvider: React.FC<CorporationProviderProps> = ({ childr
       setLoading(true);
       setError(null);
       const newCorporation = await corporationService.createCorporation(data);
+      console.log('Created new corporation:', newCorporation);
+      console.log('Data received:', data);
       setCorporations(prev => [...prev, newCorporation]);
       setCurrentCorporation(newCorporation);
       localStorage.setItem('currentCorporationId', newCorporation.id.toString());

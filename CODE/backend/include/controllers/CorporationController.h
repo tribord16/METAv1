@@ -90,6 +90,7 @@ public:
             int userId = std::stoi(std::string(userIdHeader));
             
             // Get corporations asynchronously
+            utils::Logger::info("Fetching corporations for user ID: " + std::to_string(userId));
             auto responseFuture = corpService_->getCorporationsByUserAsync(userId);
             auto apiResponse = responseFuture.get();
             
