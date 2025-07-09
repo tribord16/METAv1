@@ -1,75 +1,66 @@
-
-/************************************************************
- * @file ApiResponse.h
- * @brief DTO de réponse API générique pour toutes les opérations
- *
- * Rôle :
- *   - Fournir une structure de réponse uniforme pour toutes les routes API
- *   - Faciliter la sérialisation JSON des réponses (succès/erreur)
- *
- * Place dans l'architecture :
- *   - Utilisé par tous les contrôleurs/services pour retourner des réponses HTTP
- *
- * Dépendances :
- *   - json/json.h (sérialisation JSON)
- *   - string, vector
- *
- * TODO :
- *   - Ajouter des champs pour pagination, meta, etc. si besoin
- *   - Ajouter des tests unitaires sur la sérialisation
- ************************************************************/
+// ============================================================================
+// include/dto/common/ApiResponse.h - Standardized API Response
+// ============================================================================
 
 #pragma once
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
 namespace dto {
 namespace common {
 
-/**
- * @class ApiResponse
- * @brief DTO de réponse standard pour toutes les opérations API
- * 
- * STRUCTURE UNIFORME :
- * ```json
- * {
- *   "success": true/false,
- *   "message": "Description de l'opération",
- *   "data": { ... },           // Si succès avec données
- *   "errors": ["...", "..."]   // Si échec avec détails
- * }
- * ```
- * 
- * UTILISATION :
- * - Succès simple : ApiResponse::success("Operation completed")
- * - Succès avec data : ApiResponse::success("Data retrieved", jsonData)
- * - Erreur simple : ApiResponse::error("Something went wrong")
- * - Erreur avec détails : ApiResponse::error("Validation failed", errorsList)
- */
+template<typename T>
 class ApiResponse {
 public:
-    bool is_success;                    ///< Indicateur succès/échec
-    std::string message;                ///< Message principal
-    Json::Value data;                   ///< Données métier (si succès)
-    std::vector<std::string> errors;    ///< Détails d'erreurs (si échec)
+    bool success;
+    std::string message;
+    T data;
+    std::vector<std::string> errors;
+    long timestamp;
 
-    ApiResponse() = default;
-    ApiResponse(bool success, const std::string& message);
-    ApiResponse(bool success, const std::string& message, const Json::Value& data);
+    ApiResponse(bool success, const std::string& message, const T& data = T{}, 
+                const std::vector<std::string>& errors = {})
+        : success(success), message(message), data(data), errors(errors) {
+        timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+    }
 
-    // Factory methods pour clarté du code
-    static ApiResponse success(const std::string& message = "Success");
-    static ApiResponse success(const std::string& message, const Json::Value& data);
-    static ApiResponse error(const std::string& message);
-    static ApiResponse error(const std::string& message, const std::vector<std::string>& errors);
+    static ApiResponse<T> createSuccess(const std::string& message, const T& data = T{}) {
+        return ApiResponse<T>(true, message, data);
+    }
 
-    /**
-     * @brief Sérialisation complète vers JSON
-     * @return Json::Value avec tous les champs appropriés
-     */
-    Json::Value toJson() const;
+    static ApiResponse<T> createError(const std::string& message, 
+                                     const std::vector<std::string>& errors = {}) {
+        return ApiResponse<T>(false, message, T{}, errors);
+    }
+
+    nlohmann::json toJson() const {
+        nlohmann::json json;
+        json["success"] = success;
+        json["message"] = message;
+        json["timestamp"] = timestamp;
+        
+        if constexpr (std::is_same_v<T, nlohmann::json>) {
+            if (!data.empty()) {
+                json["data"] = data;
+            }
+        } else if constexpr (std::is_void_v<T>) {
+            // No data field for void responses
+        } else {
+            json["data"] = data;
+        }
+        
+        if (!errors.empty()) {
+            json["errors"] = errors;
+        }
+        
+        return json;
+    }
 };
+
+// Specialized for void data (no data field)
+using VoidResponse = ApiResponse<std::nullptr_t>;
 
 } // namespace common
 } // namespace dto

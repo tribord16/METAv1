@@ -1,142 +1,49 @@
-cmake_minimum_required(VERSION 3.28)
-project(meta_league_backend)
+cmake_minimum_required(VERSION 3.20)
+project(MetaLeagueBackend VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_COMPILER_LAUNCHER ccache)
+set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
-endif()
-
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-# ==================== JWT-CPP SEULEMENT ====================
-
-include(FetchContent)
-
-# JWT-CPP v0.7.0 qui marche
-message(STATUS "Fetching JWT-CPP v0.7.0...")
-FetchContent_Declare(
-    jwt-cpp
-    GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git
-    GIT_TAG v0.7.0
-    GIT_SHALLOW TRUE
-)
-
-set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "disable examples" FORCE)
-set(JWT_BUILD_TESTS OFF CACHE BOOL "disable tests" FORCE)
-
-FetchContent_MakeAvailable(jwt-cpp)
-
-# ==================== DÉPENDANCES SYSTÈME ====================
-
-find_package(Drogon REQUIRED)
-find_package(jsoncpp REQUIRED)
-find_package(Threads REQUIRED)
+# Find required packages
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 find_package(OpenSSL REQUIRED)
 
+# Include nlohmann/json
+include(FetchContent)
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
+FetchContent_MakeAvailable(json)
 
-# Ajout dans CMakeLists.txt principal
+FetchContent_Declare(jwt-cpp GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git GIT_TAG v0.7.0)
+FetchContent_MakeAvailable(jwt-cpp)
 
-# Find CURL for tests
-find_package(CURL REQUIRED)
+# MySQL Connector C++ (manually specify paths if pkg-config doesn't work)
+# You can adjust the following paths if the default locations don't work on your system
 
-# ==================== INCLUDES ====================
+set(MYSQL_INCLUDE_DIRS /usr/include/cppconn)
+set(MYSQL_LIBRARY_DIRS /usr/lib/x86_64-linux-gnu)
+set(MYSQL_LIBRARIES mysqlcppconn)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+# Add executable
+add_executable(${PROJECT_NAME} src/main.cpp)
 
-# ==================== SOURCES ====================
+# Include directories
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${MYSQL_INCLUDE_DIRS}
+)
 
-
-# ==================== SOURCES ====================
-file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-# Ajouter les modèles ORM générés (.cc)
-file(GLOB_RECURSE ORM_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/models/*.cc")
-list(APPEND SOURCES ${ORM_SOURCES})
-
-# Exclure test_runner.cpp et tous les fichiers de tests des sources principales
-list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/test_runner.cpp")
-file(GLOB TEST_CPP_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cpp")
-foreach(TEST_SRC ${TEST_CPP_FILES})
-    list(REMOVE_ITEM SOURCES "${TEST_SRC}")
-endforeach()
-
-message(STATUS "Sources trouvées:")
-foreach(SOURCE ${SOURCES})
-    message(STATUS "  ${SOURCE}")
-endforeach()
-
-# ==================== EXÉCUTABLE ====================
-
-add_executable(${PROJECT_NAME} ${SOURCES})
-
-# ==================== LINKING ====================
-
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    Drogon::Drogon
-    jsoncpp_lib
-    Threads::Threads
-    OpenSSL::SSL 
+# Link libraries
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    ${Boost_LIBRARIES}
+    OpenSSL::SSL
     OpenSSL::Crypto
+    nlohmann_json::nlohmann_json
     jwt-cpp::jwt-cpp
-    crypt  # BCrypt système Linux
+    ${MYSQL_LIBRARIES}
 )
 
-
-# Pour les tests
-
-# Conditional compilation for tests
-option(BUILD_TESTS "Build tests" OFF)
-
-
-if(BUILD_TESTS)
-    # Test framework
-    file(GLOB_RECURSE TEST_SOURCES "src/tests/*.cpp")
-    # Ajoute Logger.cpp explicitement pour les tests
-    list(APPEND TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/utils/Logger.cpp")
-
-    add_library(test_framework ${TEST_SOURCES})
-    target_link_libraries(test_framework PRIVATE 
-        Drogon::Drogon 
-        jsoncpp_lib
-        CURL::libcurl
-    )
-    target_include_directories(test_framework PRIVATE 
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-    )
-
-    # Test runner executable
-    add_executable(test_runner src/test_runner.cpp)
-    target_link_libraries(test_runner PRIVATE 
-        test_framework
-        Drogon::Drogon 
-        jsoncpp_lib
-        CURL::libcurl
-    )
-    target_include_directories(test_runner PRIVATE 
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-    )
-endif()
-
-# ==================== FLAGS ====================
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG_MODE=1)
-    target_compile_options(${PROJECT_NAME} PRIVATE -g -Wall)
-endif()
-
-# ==================== POST-BUILD ====================
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/logs
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/config
-)
-
-message(STATUS "=================================")
-message(STATUS "Configuration SIMPLE qui marche")
-message(STATUS "JWT-CPP: v0.7.0")
-message(STATUS "BCrypt: crypt() système Linux")
-message(STATUS "=================================")
-
-
-
+# Compiler flags
+# You might not need this if the MySQL Connector is linked correctly via CMake.
+# target_compile_options(${PROJECT_NAME} PRIVATE ${MYSQLCPPCONN_CFLAGS_OTHER})

@@ -30,15 +30,5 @@ struct CorporationResponse {
     }
 };
 
-// Ajout : fonction to_json pour CorporationResponse
-inline void to_json(nlohmann::json& j, const dto::corporation::CorporationResponse& resp) {
-    j = nlohmann::json{
-        {"corporation", resp.corporation},
-        {"total_players", resp.total_players},
-        {"monthly_expenses", resp.monthly_expenses},
-        {"projected_income", resp.projected_income}
-    };
-}
-
 } // namespace corporation
 } // namespace dto

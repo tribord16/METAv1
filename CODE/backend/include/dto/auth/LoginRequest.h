@@ -1,67 +1,49 @@
-
-/************************************************************
- * @file LoginRequest.h
- * @brief DTO de requête de connexion utilisateur
- *
- * Rôle :
- *   - Désérialiser les données de connexion depuis le JSON
- *   - Valider la présence des champs requis (username, password)
- *   - Fournir des messages d'erreur détaillés pour l'API
- *
- * Place dans l'architecture :
- *   - Utilisé par AuthController pour parser et valider les requêtes de login
- *
- * Dépendances :
- *   - json/json.h (sérialisation JSON)
- *   - utils/Logger (logs)
- *
- * TODO :
- *   - Ajouter la validation de la force du mot de passe côté client
- *   - Ajouter des tests unitaires sur la désérialisation et la validation
- ************************************************************/
+// ============================================================================
+// include/dto/auth/LoginRequest.h - Login Request DTO
+// ============================================================================
 
 #pragma once
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include "utils/JsonUtils.h" // Correction: Ajout de l'inclusion pour JsonUtilsHelper (nouveau nom)
 
 namespace dto {
 namespace auth {
 
-/**
- * @class LoginRequest
- * @brief DTO pour les données de connexion utilisateur
- * 
- * Structure simple contenant les credentials d'authentification.
- * Validation minimale car la vraie validation se fait en comparant
- * avec les données stockées en base.
- */
-class LoginRequest {
-public:
-    std::string username;    ///< Username ou email selon configuration
-    std::string password;    ///< Mot de passe en clair
+struct LoginRequest {
+    std::string username;
+    std::string password;
 
-    LoginRequest() = default;
-    LoginRequest(const std::string& username, const std::string& password);
+    static LoginRequest fromJson(const nlohmann::json& json) {
+        // Correction : utilisation du nouveau nom utils_json::JsonUtilsHelper:: pour éviter les conflits de portée
+        LoginRequest request;
+        request.username = utils_json::JsonUtilsHelper::getString(json, "username");
+        request.password = utils_json::JsonUtilsHelper::getString(json, "password");
+        return request;
+    }
 
-    /**
-     * @brief Factory method depuis JSON
-     * @param json Objet JSON {"username": "...", "password": "..."}
-     * @return LoginRequest DTO hydraté
-     */
-    static LoginRequest fromJson(const Json::Value& json);
+    std::vector<std::string> validate() const {
+        std::vector<std::string> errors;
+        
+        if (username.empty()) {
+            errors.push_back("Username is required");
+        } else if (username.length() < 3) {
+            errors.push_back("Username must be at least 3 characters long");
+        }
+        
+        if (password.empty()) {
+            errors.push_back("Password is required");
+        } else if (password.length() < 6) {
+            errors.push_back("Password must be at least 6 characters long");
+        }
+        
+        return errors;
+    }
 
-    /**
-     * @brief Validation basique : champs non vides
-     * @return true si username ET password non vides
-     */
-    bool isValid() const;
-
-    /**
-     * @brief Messages d'erreur si validation échoue
-     * @return Liste des champs manquants
-     */
-    std::vector<std::string> getErrors() const;
+    bool isValid() const {
+        return validate().empty();
+    }
 };
 
 } // namespace auth

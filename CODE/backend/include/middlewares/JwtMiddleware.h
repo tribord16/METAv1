@@ -1,133 +1,112 @@
-
-/************************************************************
- * @file JwtMiddleware.h
- * @brief Middleware d'authentification JWT pour protection des routes
- *
- * Rôle :
- *   - Vérifier la présence et validité des tokens JWT
- *   - Extraire les informations utilisateur du token
- *   - Injecter les données utilisateur dans la requête (req->attributes)
- *   - Bloquer l'accès si token invalide/absent
- *   - Gérer les erreurs d'authentification avec réponses appropriées
- *
- * Place dans l'architecture :
- *   - Middleware de sécurité, utilisé dans les routes protégées (controllers)
- *   - S'exécute avant le contrôleur, court-circuite en cas d'échec
- *
- * Dépendances :
- *   - Drogon (HttpMiddleware)
- *   - services/JwtService (vérification cryptographique)
- *   - dto/common/ApiResponse (formatage des erreurs)
- *   - utils/Logger (logs)
- *
- * TODO :
- *   - Ajouter la gestion des rôles/permissions dans le payload
- *   - Logger les tentatives d'accès non autorisées avec plus de détails
- *   - Ajouter des tests unitaires sur tous les cas d'erreur
- ************************************************************/
+// ============================================================================
+// include/middlewares/JwtMiddleware.h - JWT Authentication Middleware
+// ============================================================================
 
 #pragma once
-#include <drogon/HttpMiddleware.h>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <functional>
+#include <memory>
+#include "services/AuthService.h"
+#include "utils/JwtUtils.h"
+#include "utils/JsonUtils.h"
+#include "utils/Logger.h"
 
 namespace middlewares {
 
-/**
- * @class JwtMiddleware
- * @brief Middleware Drogon pour authentification et autorisation JWT
- *
- * Ce middleware implémente le pattern HttpMiddleware<T> de Drogon qui :
- * - S'exécute automatiquement avant les contrôleurs protégés
- * - Peut court-circuiter le flux (retour 401 direct)
- * - Peut enrichir la requête pour le contrôleur suivant
- * - Gère les réponses asynchrones via callbacks
- *
- * INTEGRATION DROGON :
- * - Héritage de HttpMiddleware<JwtMiddleware> (CRTP)
- * - Méthode invoke() appelée automatiquement
- * - Utilisation des callbacks nextCb (continuer) et mcb (répondre)
- * - Thread-safe par design (stateless)
- *
- * GESTION DES CAS :
- * ✅ Token valide → enrichissement req + appel contrôleur
- * ❌ Token absent → 401 "Missing Authorization header"
- * ❌ Token malformé → 401 "Invalid Authorization header format"
- * ❌ Token expiré/invalide → 401 "Invalid or expired token"
- *
- * DONNÉES INJECTÉES (si succès) :
- * - req->attributes()->get<int>("user_id")
- * - req->attributes()->get<std::string>("username")
- * - req->attributes()->get<std::string>("email")
- */
-class JwtMiddleware : public drogon::HttpMiddleware<JwtMiddleware> {
-public:
-    /**
-     * @brief Constructeur par défaut
-     * 
-     * Middleware stateless : pas d'état à initialiser.
-     * Chaque instance peut traiter plusieurs requêtes simultanément.
-     */
-    JwtMiddleware() = default;
+namespace beast = boost::beast;
+namespace http = beast::http;
 
-    /**
-     * @brief Point d'entrée principal du middleware JWT
-     * 
-     * Cette méthode est appelée automatiquement par Drogon pour chaque
-     * requête vers une route protégée par ce middleware.
-     * 
-     * PROCESSUS COMPLET :
-     * 
-     * 1. **EXTRACTION DU TOKEN**
-     *    - Récupération header "Authorization"
-     *    - Vérification format "Bearer <token>"
-     *    - Extraction de la partie token
-     * 
-     * 2. **VALIDATION CRYPTOGRAPHIQUE**
-     *    - Vérification signature HMAC-SHA256
-     *    - Contrôle date d'expiration
-     *    - Validation de l'issuer et format
-     * 
-     * 3. **ENRICHISSEMENT REQUÊTE**
-     *    - Extraction des claims (user_id, username, email)
-     *    - Injection dans req->attributes() pour le contrôleur
-     * 
-     * 4. **DÉCISION DE ROUTAGE**
-     *    - Si valide : nextCb() → appel du contrôleur
-     *    - Si invalide : mcb(401) → réponse directe sans contrôleur
-     * 
-     * @param req Requête HTTP entrante avec headers
-     * @param nextCb Callback pour continuer vers le contrôleur (si token valide)
-     * @param mcb Callback pour répondre directement (si token invalide)
-     * 
-     * EXEMPLE DE REQUÊTE VALIDE :
-     * ```
-     * GET /api/auth/me HTTP/1.1
-     * Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-     * ```
-     * 
-     * RÉPONSE 401 (token invalide) :
-     * ```json
-     * {
-     *   "success": false,
-     *   "message": "Invalid or expired token"
-     * }
-     * ```
-     * 
-     * CONTRÔLEUR APPELÉ (token valide) :
-     * ```cpp
-     * void AuthController::handleMe(const HttpRequestPtr& req, ...) {
-     *     auto userId = req->attributes()->get<int>("user_id");
-     *     auto username = req->attributes()->get<std::string>("username");
-     *     // userId et username sont disponibles ici !
-     * }
-     * ```
-     * 
-     * @note Thread-safe : peut traiter plusieurs requêtes simultanément
-     * @note Async : utilise les callbacks Drogon, ne bloque jamais
-     * @note Stateless : pas d'état partagé entre requêtes
-     */
-    void invoke(const drogon::HttpRequestPtr& req,
-                drogon::MiddlewareNextCallback&& nextCb,
-                drogon::MiddlewareCallback&& mcb) override;
+template<typename RequestHandler>
+class JwtMiddleware {
+private:
+    std::shared_ptr<services::AuthService> authService_;
+    RequestHandler next_;
+
+public:
+    JwtMiddleware(std::shared_ptr<services::AuthService> authService, RequestHandler next)
+        : authService_(std::move(authService)), next_(std::move(next)) {}
+
+    template<typename Body, typename Allocator>
+    void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, 
+                   std::function<void(http::response<http::string_body>)> send) {
+        
+        // Extract Authorization header
+        auto authHeader = req[http::field::authorization];
+        if (authHeader.empty()) {
+            utils::Logger::warn("Missing Authorization header for protected endpoint: " + std::string(req.target()));
+            sendUnauthorized(send, "Missing Authorization header");
+            return;
+        }
+
+        // Extract JWT token
+        std::string token = utils::JwtUtils::extractTokenFromHeader(std::string(authHeader));
+        if (token.empty()) {
+            utils::Logger::warn("Invalid Authorization header format: " + std::string(authHeader));
+            sendUnauthorized(send, "Invalid Authorization header format");
+            return;
+        }
+
+        // Verify token asynchronously
+        auto userFuture = authService_->verifyTokenAndGetUserAsync(token);
+        auto userOpt = userFuture.get();
+        
+        if (!userOpt.has_value()) {
+            utils::Logger::warn("Invalid or expired JWT token");
+            sendUnauthorized(send, "Invalid or expired token");
+            return;
+        }
+
+        // Add user information to request headers for next handler
+        req.set("X-User-ID", std::to_string(userOpt.value().id));
+        req.set("X-User-Username", userOpt.value().username);
+        req.set("X-User-Email", userOpt.value().email);
+
+        utils::Logger::debug("JWT authentication successful for user: " + userOpt.value().username);
+
+        // Call next handler
+        next_(std::move(req));
+    }
+
+private:
+    // --- CORS: Origin configuration for error responses ---
+    // Change this value for production deployment!
+    static constexpr const char* DEFAULT_DEV_ORIGIN = "http://localhost:3000";
+    template<typename RequestType = void>
+    std::string getAllowedOrigin(const RequestType* req = nullptr) {
+        // If request is available, try to extract Origin header
+        if constexpr (!std::is_same_v<RequestType, void>) {
+            if (req) {
+                auto origin = (*req)[http::field::origin];
+                if (!origin.empty()) {
+                    // TODO: In production, validate 'origin' against a whitelist for security
+                    return std::string(origin);
+                }
+            }
+        }
+        // Fallback: use default dev origin
+        return DEFAULT_DEV_ORIGIN;
+    }
+
+    // Send a 401 Unauthorized with proper CORS headers
+    void sendUnauthorized(std::function<void(http::response<http::string_body>)> send, 
+                         const std::string& message) {
+        auto errorResponse = utils_json::JsonUtilsHelper::createErrorResponse(message);
+        http::response<http::string_body> res{http::status::unauthorized, 11};
+        res.set(http::field::content_type, "application/json");
+        // --- CORS: set correct origin and credentials ---
+        res.set(http::field::access_control_allow_origin, getAllowedOrigin());
+        res.set(http::field::access_control_allow_credentials, "true");
+        res.body() = errorResponse.dump();
+        res.prepare_payload();
+        send(std::move(res));
+    }
 };
+
+// Helper function to create JWT middleware
+template<typename RequestHandler>
+auto makeJwtMiddleware(std::shared_ptr<services::AuthService> authService, RequestHandler&& handler) {
+    return JwtMiddleware<RequestHandler>(std::move(authService), std::forward<RequestHandler>(handler));
+}
 
 } // namespace middlewares

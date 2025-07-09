@@ -1,63 +1,63 @@
-/**
- * @file CreateCorporationRequest.h
- * @brief DTO de création de corporation - contrat API
- * @author MetaLeague Backend Team
- * @date 2025
- * @version 1.0
- *
- * RESPONSABILITÉS :
- * - Définir le contrat JSON pour création corporation
- * - Valider toutes les données d'entrée
- * - Fournir messages d'erreur clairs
- * - Sérialiser/désérialiser JSON
- */
+// ============================================================================
+// include/dto/corporation/CreateCorporationRequest.h - Corporation Creation DTO
+// ============================================================================
 
 #pragma once
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include "utils/JsonUtils.h"
 
 namespace dto {
 namespace corporation {
 
-/**
- * @class CreateCorporationRequest
- * @brief DTO pour création de nouvelle corporation
- */
-class CreateCorporationRequest {
-public:
-    std::string name;                    ///< Nom de la corporation (3-50 chars)
-    double initial_budget;               ///< Budget initial demandé
-    bool esports_active;                 ///< Division esports activée
-    bool racing_active;                  ///< Division course activée
-    bool tactical_active;                ///< Division tactique activée
-    bool innovation_active;              ///< Division innovation activée
+struct CreateCorporationRequest {
+    std::string name;
+    double initial_budget = 1000000.0;
+    bool esports_active = true;
+    bool racing_active = false;
+    bool tactical_active = false;
+    bool innovation_active = false;
 
-    CreateCorporationRequest() = default;
-    
-    /**
-     * @brief Factory depuis JSON
-     * @param json Objet JSON depuis HTTP request
-     * @return CreateCorporationRequest DTO hydraté
-     */
-    static CreateCorporationRequest fromJson(const Json::Value& json);
+    static CreateCorporationRequest fromJson(const nlohmann::json& json) {
+        CreateCorporationRequest request;
+        request.name = utils_json::JsonUtilsHelper::getString(json, "name");
+        request.initial_budget = utils_json::JsonUtilsHelper::getDouble(json, "initial_budget", 1000000.0);
+        request.esports_active = utils_json::JsonUtilsHelper::getBool(json, "esports_active", true);
+        request.racing_active = utils_json::JsonUtilsHelper::getBool(json, "racing_active", false);
+        request.tactical_active = utils_json::JsonUtilsHelper::getBool(json, "tactical_active", false);
+        request.innovation_active = utils_json::JsonUtilsHelper::getBool(json, "innovation_active", false);
+        return request;
+    }
 
-    /**
-     * @brief Validation complète des données
-     * @return true si toutes validations passent
-     */
-    bool isValid() const;
+    std::vector<std::string> validate() const {
+        std::vector<std::string> errors;
+        
+        // Name validation
+        if (name.empty()) {
+            errors.push_back("Corporation name is required");
+        } else if (name.length() < 3 || name.length() > 100) {
+            errors.push_back("Corporation name must be between 3 and 100 characters");
+        }
+        
+        // Budget validation
+        if (initial_budget < 100000.0) {
+            errors.push_back("Initial budget must be at least 100,000");
+        } else if (initial_budget > 50000000.0) {
+            errors.push_back("Initial budget cannot exceed 50,000,000");
+        }
+        
+        // Division validation - at least one must be active
+        if (!esports_active && !racing_active && !tactical_active && !innovation_active) {
+            errors.push_back("At least one division must be active");
+        }
+        
+        return errors;
+    }
 
-    /**
-     * @brief Messages d'erreur détaillés
-     * @return vector<string> Liste des erreurs
-     */
-    std::vector<std::string> getErrors() const;
-
-private:
-    bool isValidName(const std::string& name) const;
-    bool isValidBudget(double budget) const;
-    bool hasAtLeastOneDivision() const;
+    bool isValid() const {
+        return validate().empty();
+    }
 };
 
 } // namespace corporation

@@ -1,3 +1,5 @@
+
+// ====== ./include/repositories/UserRepository.h ======
 // ============================================================================
 // include/repositories/UserRepository.h - User Data Access Layer
 // ============================================================================

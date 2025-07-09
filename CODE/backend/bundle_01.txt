@@ -1,3 +1,5 @@
+
+// ====== ./src/main.cpp ======
 // ============================================================================
 // src/main.cpp - Main Server Implementation with Boost.Beast
 // ============================================================================
@@ -335,7 +337,7 @@ int main(int argc, char* argv[]) {
         std::string dbName = "meta_league_dev";
         std::string dbUser = "metaldev";
         std::string dbPassword = "MetaLeague2024!";
-        unsigned short port = 8090;
+        unsigned short port = 8080;
         int threads = std::max<int>(1, std::thread::hardware_concurrency());
 
         // Parse command line arguments

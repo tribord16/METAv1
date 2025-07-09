@@ -7,7 +7,8 @@ cd /home/tribord/PERSO/METAv1/CODE/backend/build
 make -j$(nproc)
 
 # Tue proprement le backend s’il tourne
-pkill -f meta_league_backend || true
+pkill -f MetaLeagueBackend || true
 
 # Lancer le backend sans bloquer, redirige stderr/stdout
-nohup ./meta_league_backend > backend.log 2>&1 &
+#nohup ./meta_league_backend > backend.log 2>&1 &
+./MetaLeagueBackend

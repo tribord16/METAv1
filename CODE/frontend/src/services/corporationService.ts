@@ -74,7 +74,7 @@ export interface CorporationDashboard {
 
 export const corporationService = {
   async createCorporation(data: CreateCorporationRequest): Promise<Corporation> {
-    const response = await apiClient.post<CorporationResponse>('/controllers/corporationcontroller/', data);
+    const response = await apiClient.post<CorporationResponse>('/api/corporations', data);
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.message || 'Failed to create corporation');
     }
@@ -83,7 +83,7 @@ export const corporationService = {
 
   
   async getUserCorporations(): Promise<Corporation[]> {
-    const response = await apiClient.get<CorporationListResponse>('/controllers/corporationcontroller/');
+    const response = await apiClient.get<CorporationListResponse>('/api/corporations/');
     console.log(response);
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.message || 'Failed to load corporations');
@@ -92,7 +92,7 @@ export const corporationService = {
   },
 
   async getCorporationById(id: number): Promise<Corporation> {
-    const response = await apiClient.get<CorporationResponse>(`/controllers/corporationcontroller/${id}`);
+    const response = await apiClient.get<CorporationResponse>(`/api/corporations/${id}`);
     console.log(response);
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.message || 'Failed to load corporation');
@@ -101,7 +101,7 @@ export const corporationService = {
   },
 
   async getCorporationDashboard(id: number): Promise<CorporationDashboard> {
-    const response = await apiClient.get<{ success: boolean; message: string; data?: CorporationDashboard }>(`/controllers/corporationcontroller/${id}/dashboard`);
+    const response = await apiClient.get<{ success: boolean; message: string; data?: CorporationDashboard }>(`/api/corporations/${id}/dashboard`);
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.message || 'Failed to load corporation dashboard');
     }

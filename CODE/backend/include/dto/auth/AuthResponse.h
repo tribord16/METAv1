@@ -1,75 +1,47 @@
-
-/************************************************************
- * @file AuthResponse.h
- * @brief DTO de réponse d'authentification unifié
- *
- * Rôle :
- *   - Fournir une structure de réponse uniforme pour toutes les opérations d'authentification
- *   - Faciliter la sérialisation JSON des réponses (succès/erreur)
- *
- * Place dans l'architecture :
- *   - Utilisé par AuthController pour retourner les réponses d'authentification
- *
- * Dépendances :
- *   - json/json.h (sérialisation JSON)
- *   - dto/user/UserResponse (données utilisateur)
- *
- * TODO :
- *   - Ajouter des champs pour la gestion du refresh token
- *   - Ajouter des tests unitaires sur la sérialisation
- ************************************************************/
+// ============================================================================
+// include/dto/auth/AuthResponse.h - Authentication Response DTO
+// ============================================================================
 
 #pragma once
-#include "dto/user/UserResponse.h"
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <string>
+#include "models/User.h"
 
 namespace dto {
 namespace auth {
 
-/**
- * @class AuthResponse
- * @brief DTO de réponse unifié pour toutes les opérations d'authentification
- * 
- * STRUCTURE CONDITIONNELLE :
- * - Si succès : token + user data + message positif
- * - Si échec : message d'erreur seulement
- * 
- * EXEMPLES :
- * Succès : {"success": true, "token": "...", "user": {...}}
- * Échec : {"success": false, "message": "Invalid credentials"}
- */
-class AuthResponse {
-public:
-    bool is_success;         ///< Indicateur de succès/échec
-    std::string message;     ///< Message pour l'utilisateur
-    std::string token;       ///< Token JWT (si succès uniquement)
-    user::UserResponse user; ///< Données utilisateur (si succès uniquement)
+struct AuthResponse {
+    bool success;
+    std::string message;
+    std::string token;
+    models::User user;
 
-    AuthResponse() = default;
-    AuthResponse(bool success, const std::string& message);
-    AuthResponse(bool success, const std::string& message, const std::string& token, const user::UserResponse& user);
+    AuthResponse(bool success, const std::string& message, 
+                const std::string& token = "", const models::User& user = {})
+        : success(success), message(message), token(token), user(user) {}
 
-    /**
-     * @brief Factory pour réponse de succès avec token
-     * @param token Token JWT généré
-     * @param user Données utilisateur (sans infos sensibles)
-     * @return AuthResponse de succès
-     */
-    static AuthResponse success(const std::string& token, const user::UserResponse& user);
+    static AuthResponse createSuccess(const std::string& token, const models::User& user) {
+        return AuthResponse(true, "Authentication successful", token, user);
+    }
 
-    /**
-     * @brief Factory pour réponse d'erreur
-     * @param message Message d'erreur pour l'utilisateur
-     * @return AuthResponse d'échec
-     */
-    static AuthResponse error(const std::string& message);
+    static AuthResponse createError(const std::string& message) {
+        return AuthResponse(false, message);
+    }
 
-    /**
-     * @brief Sérialisation vers JSON pour HTTP response
-     * @return Json::Value prêt pour HttpResponse
-     */
-    Json::Value toJson() const;
+    nlohmann::json toJson() const {
+        nlohmann::json json;
+        json["success"] = success;
+        json["message"] = message;
+        json["timestamp"] = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        
+        if (success && !token.empty()) {
+            json["token"] = token;
+            json["user"] = user.toJson();
+        }
+        
+        return json;
+    }
 };
 
 } // namespace auth

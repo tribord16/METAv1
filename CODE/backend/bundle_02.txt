@@ -1,3 +1,5 @@
+
+// ====== ./include/repositories/CorporationRepository.h ======
 // ============================================================================
 // include/repositories/CorporationRepository.h - Corporation Data Access Layer
 // ============================================================================
@@ -44,7 +46,7 @@ public:
                 std::unique_ptr<sql::PreparedStatement> stmt(
                     conn->prepareStatement(
                         "INSERT INTO corporations (user_id, name, budget, reputation, current_season, current_week, "
-                        "esports_active, racing_active, tactical_active, innovation_active, created_at, last_played) "
+                        "esports_active, racing_active, tactical_active, innovation_active, created_at, updated_at) "
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
                     ));
                 
@@ -58,7 +60,7 @@ public:
                 stmt->setBoolean(8, corporation.racing_active);
                 stmt->setBoolean(9, corporation.tactical_active);
                 stmt->setBoolean(10, corporation.innovation_active);
-
+                
                 int affectedRows = stmt->executeUpdate();
                 if (affectedRows == 0) {
                     utils::Logger::error("Failed to insert corporation: " + corporation.name);
