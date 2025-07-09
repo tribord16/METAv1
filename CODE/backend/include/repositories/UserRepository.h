@@ -65,11 +65,14 @@
  */
 
 #pragma once
-#include "models/User.h"
+#include <models/Users.h>
 #include <drogon/orm/DbClient.h>
 #include <functional>
 #include <optional>
 #include <string>
+
+// Alias pour éviter d'écrire le namespace complet partout
+using Users = drogon_model::meta_league_dev::Users;
 
 namespace repositories {
 
@@ -210,8 +213,8 @@ public:
      * @note Thread-safe : peut être appelé depuis plusieurs threads
      * @note Transactionnel : l'insertion est atomique
      */
-    void create(const models::User& user,
-                std::function<void(const models::User&)> onSuccess,
+    void create(const drogon_model::meta_league_dev::Users& user,
+                std::function<void(const drogon_model::meta_league_dev::Users&)> onSuccess,
                 std::function<void(const std::string&)> onError);
 
     /**
@@ -253,7 +256,7 @@ public:
      * @note Gestion d'erreur : erreur DB = nullopt (pas d'exception)
      */
     void findByUsername(const std::string& username,
-                       std::function<void(std::optional<models::User>)> callback);
+                       std::function<void(std::optional<drogon_model::meta_league_dev::Users>)> callback);
 
     /**
      * @brief Recherche un utilisateur actif par son adresse email
@@ -285,7 +288,7 @@ public:
      * @note Ne retourne que les utilisateurs actifs
      */
     void findByEmail(const std::string& email,
-                    std::function<void(std::optional<models::User>)> callback);
+                    std::function<void(std::optional<drogon_model::meta_league_dev::Users>)> callback);
 
     /**
      * @brief Recherche un utilisateur actif par son ID
@@ -320,7 +323,7 @@ public:
      * @note Ne retourne que les utilisateurs actifs
      */
     void findById(int id,
-                 std::function<void(std::optional<models::User>)> callback);
+                 std::function<void(std::optional<drogon_model::meta_league_dev::Users>)> callback);
 
     // ==================== OPÉRATIONS DE VÉRIFICATION ====================
 
@@ -443,7 +446,7 @@ private:
      * @note Pas de validation métier (fait par les models)
      * @note Exception possible si structure DB incompatible
      */
-    models::User rowToUser(const drogon::orm::Row& row);
+    // models::User rowToUser(const drogon::orm::Row& row); // plus utilisé, migration ORM
 };
 
 } // namespace repositories

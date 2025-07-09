@@ -11,7 +11,7 @@
 
 namespace services {
 
-std::string JwtService::generateToken(const models::User& user) {
+std::string JwtService::generateToken(const Users& user) {
     auto now = std::chrono::system_clock::now();
     auto exp = now + std::chrono::hours(24);
     
@@ -19,14 +19,14 @@ std::string JwtService::generateToken(const models::User& user) {
         auto token = jwt::create()
             .set_issuer("meta-league")
             .set_type("JWT")
-            .set_payload_claim("user_id", jwt::claim(std::to_string(user.id)))  // ← Convertir en string
-            .set_payload_claim("username", jwt::claim(user.username))
-            .set_payload_claim("email", jwt::claim(user.email))
+            .set_payload_claim("user_id", jwt::claim(std::to_string(user.getValueOfId())))  // ← Convertir en string
+            .set_payload_claim("username", jwt::claim(user.getValueOfUsername()))
+            .set_payload_claim("email", jwt::claim(user.getValueOfEmail()))
             .set_issued_at(now)
             .set_expires_at(exp)
             .sign(jwt::algorithm::hs256{getSecret()});
         
-        Logger::info("JWT token generated for user: " + user.username);
+        Logger::info("JWT token generated for user: " + user.getValueOfUsername());
         return token;
         
     } catch (const std::exception& e) {

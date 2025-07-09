@@ -1,402 +1,147 @@
-// ====== ./src/main.cpp ======
-/**
- * @file main.cpp
- * @brief Point d'entrée principal de l'application Meta League Backend
- * @author Meta League Backend Team
- * @date 2025
- * @version 1.0
- *
- * RESPONSABILITÉS :
- * - Initialiser la configuration de l'application (.env + config.json)
- * - Configurer et démarrer le serveur Drogon
- * - Gérer les erreurs de démarrage et la journalisation
- * - Charger automatiquement les contrôleurs et middlewares
- *
- * ARCHITECTURE DE DÉMARRAGE :
- * 1. Chargement des variables d'environnement (.env)
- * 2. Configuration du logger applicatif
- * 3. Chargement de la configuration Drogon (config.json)
- * 4. Auto-découverte des contrôleurs et middlewares
- * 5. Démarrage du serveur HTTP
- *
- * PATTERN DROGON :
- * - app().loadConfigFile() : charge TOUT automatiquement
- * - Pas besoin d'enregistrer manuellement les contrôleurs
- * - Les middlewares globaux sont définis dans config.json
- * - Les middlewares spécifiques sont dans PATH_LIST des contrôleurs
- *
- * CONFIGURATION :
- * - Variables d'env : ../config/dev.env (DB, JWT, etc.)
- * - Config Drogon : ../config/config.json (serveur, DB pool, middlewares)
- *
- * EXEMPLE DE DÉMARRAGE :
- * ```bash
- * cd backend/build
- * ./meta_league_backend
- * # Serveur démarre sur http://localhost:8080
- * ```
- *
- * GESTION D'ERREURS :
- * - Exceptions capturées et loggées
- * - Retour d'erreur approprié (exit code 1)
- * - Messages d'erreur détaillés pour debugging
- */
+// src/main.cpp - FIX CORS COMPLET
+
 
 #include <drogon/drogon.h>
 #include <drogon/orm/DbClient.h>
-#include <middlewares/RateLimitMiddleware.h>
-#include <middlewares/CorsMiddleware.h>
+#include <controllers/AuthController.h>
+#include <controllers/CorporationController.h>
 #include <fstream>
 #include <utils/Logger.h>
 #include <config/AppConfig.h>
-
-// ⚠️ IMPORTANT : PAS BESOIN d'inclure les contrôleurs/middlewares ici !
-// Drogon les découvre et charge automatiquement via config.json
-// et les macros PATH_LIST_BEGIN/PATH_LIST_END des contrôleurs
+#include <dto/common/ApiResponse.h>
 
 using namespace drogon;
 
-/**
- * @brief Point d'entrée principal de l'application
- * 
- * SÉQUENCE DE DÉMARRAGE COMPLÈTE :
- * 
- * 1. **CONFIGURATION CUSTOM** (.env)
- *    - Charge les variables d'environnement applicatives
- *    - DB credentials, JWT secret, paramètres jeu, etc.
- * 
- * 2. **LOGGING APPLICATIF**
- *    - Initialise notre logger custom (utils/Logger)
- *    - Affiche les infos de démarrage et configuration
- * 
- * 3. **CONFIGURATION DROGON** (config.json)
- *    - Charge la config serveur, DB pool, middlewares globaux
- *    - AUTO-DÉCOUVERTE des contrôleurs via leurs macros PATH_LIST
- *    - Configuration des listeners (host/port)
- * 
- * 4. **DÉMARRAGE SERVEUR**
- *    - app().addListener() : configure l'écoute HTTP
- *    - app().run() : démarre la boucle d'événements (BLOQUANT)
- * 
- * @return int Code de retour (0 = succès, 1 = erreur)
- * 
- * EXEMPLE DE LOGS AU DÉMARRAGE :
- * ```
- * [2025-07-08 14:30:15] [INFO] Starting Meta League Backend
- * [2025-07-08 14:30:15] [INFO] Running in debug mode
- * [2025-07-08 14:30:15] [INFO] Available API endpoints:
- * [2025-07-08 14:30:15] [INFO]   POST /api/auth/register       - User registration
- * [2025-07-08 14:30:15] [INFO]   POST /api/auth/login          - User login  
- * [2025-07-08 14:30:15] [INFO]   GET  /api/auth/me             - Get current user (protected)
- * [2025-07-08 14:30:15] [INFO] Server running on http://0.0.0.0:8080
- * ```
- */
 int main() {
     try {
-        // ==================== ÉTAPE 1 : CONFIGURATION CUSTOM ====================
-        
-        /**
-         * Initialise notre système de configuration custom qui charge
-         * les variables d'environnement depuis ../config/dev.env
-         * 
-         * Variables chargées :
-         * - APP_NAME, DEBUG_MODE
-         * - SERVER_HOST, SERVER_PORT  
-         * - DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
-         * - JWT_SECRET
-         * - GAME_* (paramètres métier)
-         */
+        // ==================== CONFIGURATION ====================
         AppConfig::init();
-
-        // ==================== ÉTAPE 2 : LOGGING APPLICATIF ====================
-        
-        /**
-         * Notre logger custom pour les messages applicatifs
-         * (différent du logger Drogon qui gère les logs framework)
-         */
         Logger::info("Starting " + AppConfig::getAppName());
         Logger::info(std::string("Running in ") + (AppConfig::isDebug() ? "debug" : "production") + " mode");
 
-        // ==================== ÉTAPE 3 : CONFIGURATION DROGON ====================
+        // ==================== CORS FIX COMPLET ====================
         
         /**
-         * 🚀 MAGIE DROGON : app().loadConfigFile() fait TOUT automatiquement :
+         * 🔧 PROBLÈME : Le navigateur envoie une requête OPTIONS (preflight)
+         * AVANT chaque requête POST/PUT/DELETE avec headers custom
          * 
-         * - Lit config.json pour la config serveur/DB/middlewares
-         * - SCANNE tous les .h/.cpp pour trouver les contrôleurs
-         * - Enregistre automatiquement les routes déclarées dans PATH_LIST
-         * - Configure le pool de connexions DB
-         * - Active les middlewares globaux listés dans config.json
-         * 
-         * ⚠️ C'est pourquoi on n'a PAS besoin de faire :
-         * app().registerController<AuthController>(); // ← INTERDIT
+         * SOLUTION : Intercepter TOUTES les requêtes OPTIONS et répondre avec headers CORS
          */
-        app().loadConfigFile("../config/config.json");
-
-        /**
-         * Configure le niveau de log Drogon selon notre mode debug
-         * - Debug : logs détaillés (kDebug)
-         * - Prod : logs essentiels seulement (kInfo)
-         */
-        app().setLogLevel(AppConfig::isDebug() ? trantor::Logger::kDebug : trantor::Logger::kInfo);
-
-        // ==================== ÉTAPE 4 : CONFIGURATION SERVEUR ====================
         
-        /**
-         * Configure l'écoute HTTP sur host:port définis dans .env
-         * Pattern officiel Drogon pour add listener
-         */
-        app().addListener(AppConfig::getServerHost(), AppConfig::getServerPort());
+        Logger::info("🔧 [CORS] Configuration CORS complète...");
 
-        // ==================== ROUTE DE TEST OPTIONNELLE ====================
-        
-        /**
-         * Route de test simple pour vérifier que le serveur fonctionne
-         * et que la configuration est bien chargée
-         * 
-         * GET /test → infos de configuration
-         */
-        app().registerHandler("/test",
-            [](const HttpRequestPtr &req,
-               std::function<void (const HttpResponsePtr &)> &&callback) {
-                Json::Value resp;
-                resp["app"] = AppConfig::getAppName();
-                resp["debug"] = AppConfig::isDebug();
-                resp["default_budget"] = AppConfig::getDefaultBudget();
-                resp["server_time"] = std::time(nullptr);
-                
-                auto response = HttpResponse::newHttpJsonResponse(resp);
-                callback(response);
-            });
-
-        // ==================== DOCUMENTATION API ====================
-        
-        /**
-         * Affichage des endpoints disponibles pour les développeurs
-         * Utile pendant le développement pour connaître l'API
-         */
-        Logger::info("Available API endpoints:");
-        Logger::info("  GET  /test                    - Test endpoint & config info");
-        Logger::info("  POST /api/auth/register       - User registration");
-        Logger::info("  POST /api/auth/login          - User login");
-        Logger::info("  GET  /api/auth/me             - Get current user (JWT protected)");
-
-        /**
-         * Affichage de l'URL complète du serveur
-         * Permet de copier-coller directement dans le navigateur/Postman
-         */
-        Logger::info("Server running on http://" + AppConfig::getServerHost() + ":" + std::to_string(AppConfig::getServerPort()));
-
-        // ==================== CORS GLOBAL (AOP) ====================
-        /**
-         * CORS GLOBAL (RECOMMANDÉ PAR LA DOC DROGON) :
-         * Utilise un PreRoutingAdvice pour gérer toutes les requêtes CORS sur /api/
-         * - Répond à toutes les requêtes OPTIONS sur /api/ avec les bons headers
-         * - Ajoute les headers CORS à toutes les réponses API
-         * - Plus fiable et simple que le middleware custom
-         *
-         * Voir : https://github.com/drogonframework/drogon/issues/1102
-         */
+        // 1. PREFLIGHT : Intercepter TOUTES les OPTIONS
         app().registerPreRoutingAdvice([](const HttpRequestPtr &req,
                                           FilterCallback &&stop,
                                           FilterChainCallback &&pass) {
-            // CORS pour toutes les routes /api/*
-            if (req->path().compare(0, 4, "/api") != 0) {
-                pass();
-                return;
-            }
-            // Si requête OPTIONS (preflight), on répond direct avec headers CORS
+            
+            Logger::debug(std::string("[CORS] Request: ") + req->getMethodString() + " " + req->path());
+            
+            // Si c'est une requête OPTIONS (preflight), on répond directement
             if (req->method() == drogon::Options) {
+                Logger::info("🔧 [CORS] Preflight OPTIONS interceptée pour: " + req->path());
+                
                 auto resp = drogon::HttpResponse::newHttpResponse();
+                resp->setStatusCode(drogon::k200OK);
+                
+                // Headers CORS complets
                 resp->addHeader("Access-Control-Allow-Origin", "*");
                 resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
                 resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-                resp->addHeader("Access-Control-Max-Age", "86400");
-                Logger::info("[CORS] Preflight OPTIONS interceptée sur " + req->path());
-                stop(resp);
+                resp->addHeader("Access-Control-Max-Age", "86400"); // Cache 24h
+                
+                // Body vide pour OPTIONS
+                resp->setBody("");
+                
+                stop(resp); // STOP = répondre directement, pas de controller
                 return;
             }
-            // Sinon, on laisse passer (headers ajoutés en post-handling)
+            
+            // Sinon, continuer normalement
             pass();
         });
 
-        // Ajout des headers CORS à toutes les réponses API (post-handling)
+        // 2. POST-HANDLING : Ajouter headers CORS à TOUTES les réponses
         app().registerPostHandlingAdvice([](const HttpRequestPtr &req, const HttpResponsePtr &resp) {
-            if (req->path().compare(0, 4, "/api") == 0) {
-                resp->addHeader("Access-Control-Allow-Origin", "*");
-                resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-                resp->addHeader("Access-Control-Max-Age", "86400");
-                Logger::debug("[CORS] Headers ajoutés à la réponse pour " + req->path());
-            }
+            // Ajouter headers CORS à toutes les réponses
+            resp->addHeader("Access-Control-Allow-Origin", "*");
+            resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+            resp->addHeader("Access-Control-Max-Age", "86400");
+            
+            Logger::debug("[CORS] Headers ajoutés à la réponse: " + req->path() +
+                          " | Method: " + req->getMethodString() +
+                          " | Origin: " + req->getHeader("Origin") +
+                          " | User-Agent: " + req->getHeader("User-Agent"));
         });
 
-        Logger::info("[CORS] CORS global activé via PreRoutingAdvice/PostHandlingAdvice (AOP Drogon)");
+        Logger::info("✅ [CORS] CORS configuré : preflight OPTIONS + headers sur toutes réponses");
 
-        // ==================== ÉTAPE 5 : DÉMARRAGE SERVEUR ====================
-        /**
-         * 🎯 DÉMARRAGE FINAL : app().run() lance la boucle d'événements
-         * 
-         * Cette méthode est BLOQUANTE et ne retourne jamais en fonctionnement normal
-         * Le serveur traite les requêtes HTTP de manière asynchrone
-         * 
-         * Arrêt possible par :
-         * - Ctrl+C (SIGINT)
-         * - SIGTERM 
-         * - Exception non gérée
-         */
-        app().run();
-        
-    } catch (const std::exception& e) {
-        // ==================== GESTION D'ERREURS ====================
-        
-        /**
-         * Capture TOUTE exception durant le démarrage
-         * Logs détaillés pour debugging + message console pour ops
-         */
-        std::string errorMsg = "Failed to start server: " + std::string(e.what());
-        
-        // Log vers notre système (fichier de log)
-        Logger::error(errorMsg);
-        
-        // Message vers stderr pour les ops/monitoring
-        std::cerr << "[FATAL] " << errorMsg << std::endl;
-        
-        /**
-         * CAUSES COURANTES D'ERREURS :
-         * - Fichier config.json introuvable ou mal formaté
-         * - Variables .env manquantes ou invalides  
-         * - Port déjà utilisé (autre process sur 8080)
-         * - DB inaccessible (mauvais credentials/host)
-         * - Permissions insuffisantes (bind port < 1024 sans root)
-         */
-        
-        return 1; // Exit code erreur pour scripts/monitoring
-    }
-    
-    /**
-     * Code jamais atteint en fonctionnement normal
-     * app().run() est bloquant et ne retourne que si erreur ou arrêt
-     */
-    return 0;
-}
-
-/*
-ANCIENNE VERSION COMMENTÉE POUR RÉFÉRENCE :
-
-int main() {
-    try {
-        // Ancienne approche : chargement config simple
-        const std::string configPath = "../config/config.json";
-
-        std::ifstream f(configPath);
-        if (!f.is_open()) {
-            Logger::error("Failed to open configuration file: " + configPath);
-            return 1;
+        // ==================== CONFIG DROGON ====================
+        try {
+            app().loadConfigFile("../config/config.json");
+            Logger::info("✅ Config.json loaded");
+        } catch (const std::exception& e) {
+            Logger::warn("⚠️  Config.json not found, using defaults");
         }
 
-        app().loadConfigFile(configPath);
-        Logger::info("Configuration file loaded successfully: " + configPath);
-
-        app().setLogLevel(trantor::Logger::kInfo);
-        Logger::info("Starting the application...");
-
-        app().run();
-        
-    } catch (const std::exception &e) {
-        Logger::error("Exception occurred: " + std::string(e.what()));
-        return 1;
-    } catch (...) {
-        Logger::error("An unknown error occurred.");
-        return 1;
-    }
-    return 0;
-}
-/#include <drogon/drogon.h>
-#include <drogon/orm/DbClient.h>
-#include <fstream>
-#include <utils/Logger.h>
-#include <config/AppConfig.h>
-
-// ⚠️ PAS BESOIN d'inclure les middlewares/controllers ici 
-// Ils sont chargés automatiquement par Drogon via config.json !
-
-using namespace drogon;
-
-int main() {
-    try {
-        // Initialize custom config (.env)
-        AppConfig::init();
-
-        // Logger info
-        Logger::info("Starting " + AppConfig::getAppName());
-        Logger::info(std::string("Running in ") + (AppConfig::isDebug() ? "debug" : "production") + " mode");
-
-        // Load Drogon config (middlewares/controllers auto)
-        app().loadConfigFile("../config/config.json");
-
-        // Set log level
+        // ==================== SERVEUR CONFIG ====================
         app().setLogLevel(AppConfig::isDebug() ? trantor::Logger::kDebug : trantor::Logger::kInfo);
-
-        // Add listener (official pattern)
         app().addListener(AppConfig::getServerHost(), AppConfig::getServerPort());
 
-        // Test route (optional)
+        // ==================== ROUTES DE TEST ====================
+        
+        // Route test simple
         app().registerHandler("/test",
-            [](const HttpRequestPtr &req,
-               std::function<void (const HttpResponsePtr &)> &&callback) {
-                Json::Value resp;
-                resp["app"] = AppConfig::getAppName();
-                resp["debug"] = AppConfig::isDebug();
-                resp["default_budget"] = AppConfig::getDefaultBudget();
-                auto response = HttpResponse::newHttpJsonResponse(resp);
+            [](const HttpRequestPtr &req, std::function<void (const HttpResponsePtr &)> &&callback) {
+                Json::Value data;
+                data["app"] = AppConfig::getAppName();
+                data["debug"] = AppConfig::isDebug();
+                data["server_time"] = std::time(nullptr);
+                data["cors_test"] = "CORS headers should be present";
+                auto apiResp = dto::common::ApiResponse::success("Test endpoint", data);
+                auto response = HttpResponse::newHttpJsonResponse(apiResp.toJson());
                 callback(response);
             });
 
-        Logger::info("Available API endpoints:");
-        Logger::info("  GET  /test                    - Test endpoint");
-        Logger::info("  POST /api/auth/register       - User registration");
-        Logger::info("  POST /api/auth/login          - User login");
-        Logger::info("  GET  /api/auth/me             - Get current user (protected)");
+        // Route test CORS spécifique
+        app().registerHandler("/cors-test",
+            [](const HttpRequestPtr &req, std::function<void (const HttpResponsePtr &)> &&callback) {
+                Json::Value data;
+                data["method"] = req->getMethodString();
+                data["origin"] = req->getHeader("Origin");
+                data["user_agent"] = req->getHeader("User-Agent");
+                auto apiResp = dto::common::ApiResponse::success("CORS test endpoint", data);
+                auto response = HttpResponse::newHttpJsonResponse(apiResp.toJson());
+                callback(response);
+            },
+            {Get, Post, Put, Delete, Options}); // Multi-méthodes
 
-        Logger::info("Server running on http://" + AppConfig::getServerHost() + ":" + std::to_string(AppConfig::getServerPort()));
+        
 
+        // ==================== LOGS DÉMARRAGE ====================
+        Logger::info("🚀 Routes disponibles:");
+        Logger::info("  📡 GET  /test                                     - Test config");
+        Logger::info("  🔧 ANY  /cors-test                               - Test CORS");
+        Logger::info("  🔐 POST /controllers/authcontroller/register     - User registration");
+        Logger::info("  🔐 POST /controllers/authcontroller/login        - User login");
+        Logger::info("  🔐 GET  /controllers/authcontroller/me           - Current user");
+        Logger::info("  🏢 POST /controllers/corporationcontroller/      - Create corp");
+
+        Logger::info("💡 Tests CORS à faire:");
+        Logger::info("  1. curl -X OPTIONS http://localhost:8080/controllers/authcontroller/login");
+        Logger::info("  2. Depuis ton frontend React sur localhost:3000");
+
+        Logger::info("🌐 Server running on http://" + AppConfig::getServerHost() + ":" + std::to_string(AppConfig::getServerPort()));
+        Logger::info("🔗 Frontend autorisé: http://localhost:3000 (et tous autres origins avec *)");
+
+        // ==================== DÉMARRAGE ====================
         app().run();
+        
     } catch (const std::exception& e) {
-        std::cerr << "Failed to start: " << e.what() << std::endl;
+        std::cerr << "❌ [FATAL] " << e.what() << std::endl;
         Logger::error("Failed to start: " + std::string(e.what()));
         return 1;
     }
     return 0;
 }
-int main() {
-    try {
-        // Load the configuration file
-        const std::string configPath = "../config/config.json";
-
-        std::ifstream f(configPath);
-        if (!f.is_open()) {
-            Logger::error("Failed to open configuration file: " + configPath);
-            return 1;
-        }
-
-        app().loadConfigFile(configPath);
-        Logger::info("Configuration file loaded successfully: " + configPath);
-
-        // Set up the logger
-        app().setLogLevel(trantor::Logger::kInfo);
-
-        Logger::info("Starting the application...");
-
-        app().run();
-        
-    } catch (const std::exception &e) {
-        Logger::error("Exception occurred: " + std::string(e.what()));
-        return 1;
-    } catch (...) {
-        Logger::error("An unknown error occurred.");
-        return 1;
-    }
-    return 0;
-
-}*/

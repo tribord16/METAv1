@@ -8,11 +8,11 @@
 namespace dto {
 namespace user {
 
-UserResponse::UserResponse(const models::User& user)
-    : id(user.id), username(user.username), email(user.email),
-      is_active(user.is_active), created_at(user.getCreatedAtString()) {}
+UserResponse::UserResponse(const Users& user)
+    : id(user.getValueOfId()), username(user.getValueOfUsername()), email(user.getValueOfEmail()),
+      is_active(user.getValueOfIsActive()), created_at(user.getValueOfCreatedAt().toFormattedStringLocal(false)) {}
 
-UserResponse UserResponse::fromUser(const models::User& user) {
+UserResponse UserResponse::fromUser(const Users& user) {
     return UserResponse(user);
 }
 

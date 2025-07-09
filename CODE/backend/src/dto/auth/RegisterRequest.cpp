@@ -6,6 +6,7 @@
 
 #include "dto/auth/RegisterRequest.h"
 #include <regex>
+#include "utils/Logger.h"
 
 namespace dto {
 namespace auth {
@@ -16,16 +17,43 @@ RegisterRequest::RegisterRequest(const std::string& username, const std::string&
 RegisterRequest RegisterRequest::fromJson(const Json::Value& json) {
     RegisterRequest request;
     
-    // Extraction avec valeurs par défaut (chaînes vides si champ absent)
-    request.username = json.get("username", "").asString();
-    request.email = json.get("email", "").asString();
-    request.password = json.get("password", "").asString();
+    Logger::debug("[RegisterRequest] Parsing JSON: " + json.toStyledString());
+    
+    // 🔧 FIX: Vérifier si les clés existent avant extraction
+    if (json.isMember("username") && json["username"].isString()) {
+        request.username = json["username"].asString();
+    } else {
+        Logger::error("[RegisterRequest] Missing or invalid 'username' field");
+    }
+    
+    if (json.isMember("email") && json["email"].isString()) {
+        request.email = json["email"].asString();
+    } else {
+        Logger::error("[RegisterRequest] Missing or invalid 'email' field");
+    }
+    
+    if (json.isMember("password") && json["password"].isString()) {
+        request.password = json["password"].asString();
+    } else {
+        Logger::error("[RegisterRequest] Missing or invalid 'password' field");
+    }
+    
+    Logger::debug("[RegisterRequest] Final values - username: '" + request.username + 
+                  "', email: '" + request.email + 
+                  "', password length: " + std::to_string(request.password.length()));
     
     return request;
 }
 
+// Reste du code inchangé...
 bool RegisterRequest::isValid() const {
-    return isValidUsername(username) && isValidEmail(email) && isValidPassword(password);
+    bool valid = isValidUsername(username) && isValidEmail(email) && isValidPassword(password);
+    
+    Logger::debug("[RegisterRequest] Validation - username valid: " + std::string(isValidUsername(username) ? "true" : "false") +
+                  ", email valid: " + std::string(isValidEmail(email) ? "true" : "false") +
+                  ", password valid: " + std::string(isValidPassword(password) ? "true" : "false"));
+    
+    return valid;
 }
 
 std::vector<std::string> RegisterRequest::getErrors() const {
@@ -33,37 +61,37 @@ std::vector<std::string> RegisterRequest::getErrors() const {
     
     if (!isValidUsername(username)) {
         errors.push_back("Username must be 3-50 characters and contain only letters, numbers, and underscores");
+        Logger::debug("[RegisterRequest] Username validation failed for: '" + username + "' (length: " + std::to_string(username.length()) + ")");
     }
     
     if (!isValidEmail(email)) {
         errors.push_back("Invalid email format");
+        Logger::debug("[RegisterRequest] Email validation failed for: '" + email + "'");
     }
     
     if (!isValidPassword(password)) {
         errors.push_back("Password must be at least 6 characters long");
+        Logger::debug("[RegisterRequest] Password validation failed - length: " + std::to_string(password.length()));
     }
     
     return errors;
 }
 
 bool RegisterRequest::isValidEmail(const std::string& email) const {
-    // Regex RFC 5322 simplifiée mais robuste
+    if (email.empty()) return false;
+    
     const std::regex email_regex(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)");
     return std::regex_match(email, email_regex);
 }
 
 bool RegisterRequest::isValidUsername(const std::string& username) const {
-    // Vérification longueur
     if (username.length() < 3 || username.length() > 50) return false;
     
-    // Vérification caractères autorisés : lettres, chiffres, underscore
     const std::regex username_regex(R"(^[a-zA-Z0-9_]+$)");
     return std::regex_match(username, username_regex);
 }
 
 bool RegisterRequest::isValidPassword(const std::string& password) const {
-    // Validation minimale : au moins 6 caractères
-    // TODO: renforcer selon besoins (majuscules, chiffres, caractères spéciaux)
     return password.length() >= 6;
 }
 

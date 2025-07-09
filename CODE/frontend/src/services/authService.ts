@@ -22,12 +22,12 @@ export interface AuthResponse {
 
 export const authService = {
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await apiClient.post('/api/auth/register', data);
+    const response = await apiClient.post('/controllers/authcontroller/register', data);
     return response.data;
   },
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await apiClient.post('/api/auth/login', data);
+    const response = await apiClient.post('/controllers/authcontroller/login', data);
     if (response.data.token) {
       localStorage.setItem('jwt_token', response.data.token);
     }
@@ -35,7 +35,7 @@ export const authService = {
   },
 
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get('/api/auth/me');
+    const response = await apiClient.get('/controllers/authcontroller/me');
     return response.data.data;
   },
 

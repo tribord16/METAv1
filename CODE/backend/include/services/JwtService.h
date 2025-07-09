@@ -4,9 +4,12 @@
  */
 
 #pragma once
-#include "models/User.h"
+#include <models/Users.h>
 #include <string>
 #include <optional>
+
+// Alias pour éviter d'écrire le namespace complet partout
+using Users = drogon_model::meta_league_dev::Users;
 
 namespace services {
 
@@ -19,7 +22,7 @@ struct JwtPayload {
 class JwtService {
 public:
     // Générer un token JWT
-    static std::string generateToken(const models::User& user);
+    static std::string generateToken(const Users& user);
     
     // Vérifier et décoder un token
     static std::optional<JwtPayload> verifyToken(const std::string& token);

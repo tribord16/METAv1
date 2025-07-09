@@ -31,11 +31,15 @@ void AuthService::registerUser(const dto::auth::RegisterRequest& request,
         std::string hashedPassword = utils::CryptoUtils::hashPassword(request.password);
         
         // 3. Créer l'utilisateur
-        models::User newUser(request.username, request.email, hashedPassword);
+        Users newUser;
+        newUser.setUsername(request.username);
+        newUser.setEmail(request.email);
+        newUser.setPasswordHash(hashedPassword);
+        newUser.setIsActive(true);
         
         userRepo_->create(newUser,
-            [this, callback](const models::User& createdUser) {
-                Logger::info("User registered successfully: " + createdUser.username);
+            [this, callback](const Users& createdUser) {
+                Logger::info("User registered successfully: " + createdUser.getValueOfUsername());
                 
                 // 4. Générer le token JWT
                 std::string token = JwtService::generateToken(createdUser);
@@ -60,7 +64,7 @@ void AuthService::login(const dto::auth::LoginRequest& request,
     Logger::info("Login attempt for: " + request.username);
     
     // 1. Chercher l'utilisateur
-    userRepo_->findByUsername(request.username, [this, request, callback](std::optional<models::User> userOpt) {
+    userRepo_->findByUsername(request.username, [this, request, callback](std::optional<Users> userOpt) {
         if (!userOpt.has_value()) {
             Logger::warn("Login failed - user not found: " + request.username);
             callback(dto::auth::AuthResponse::error("Invalid credentials"));
@@ -70,13 +74,13 @@ void AuthService::login(const dto::auth::LoginRequest& request,
         auto user = userOpt.value();
         
         // 2. Vérifier le mot de passe
-        if (!utils::CryptoUtils::verifyPassword(request.password, user.password_hash)) {
+        if (!utils::CryptoUtils::verifyPassword(request.password, user.getValueOfPasswordHash())) {
             Logger::warn("Login failed - wrong password for: " + request.username);
             callback(dto::auth::AuthResponse::error("Invalid credentials"));
             return;
         }
         
-        Logger::info("Login successful for: " + user.username);
+        Logger::info("Login successful for: " + user.getValueOfUsername());
         
         // 3. Générer le token JWT
         std::string token = JwtService::generateToken(user);

@@ -9,9 +9,12 @@
  */
 
 #pragma once
-#include "models/User.h"
+#include <models/Users.h>
 #include <json/json.h>
 #include <string>
+
+// Alias pour éviter d'écrire le namespace complet partout
+using Users = drogon_model::meta_league_dev::Users;
 
 namespace dto {
 namespace user {
@@ -36,14 +39,14 @@ public:
     std::string created_at;  ///< Date de création (format string)
 
     UserResponse() = default;
-    explicit UserResponse(const models::User& user);
+    explicit UserResponse(const Users& user);
 
     /**
      * @brief Factory depuis entité User
      * @param user Entité User complète (avec données sensibles)
      * @return UserResponse sans données sensibles
      */
-    static UserResponse fromUser(const models::User& user);
+    static UserResponse fromUser(const Users& user);
 
     /**
      * @brief Sérialisation JSON

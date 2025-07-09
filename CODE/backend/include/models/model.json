@@ -1,0 +1,13 @@
+{
+  "rdbms": "mysql",
+  "host": "127.0.0.1",
+  "port": 3306,
+  "dbname": "meta_league_dev",
+  "user": "metaldev",
+  "passwd": "MetaLeague2024!",
+  "tables": [],
+  "relationships": {
+    "enabled": false,
+    "items": []
+  }
+}
